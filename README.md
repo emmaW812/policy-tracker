@@ -1,2 +1,3 @@
 # policy-tracker
-environmental
+- US current policy tracker and visualizer
+
