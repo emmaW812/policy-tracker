@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Propaganda &amp; Rights Tracker — Authoritarian Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── PAGE HERO ── */
+    .pr-hero {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1.5rem 2rem;
+    }
+    .pr-hero-inner {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .pr-hero h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: 0.01em; margin-bottom: 0.4rem; }
+    .pr-hero h1 span { color: var(--blue-light); }
+    .pr-hero-sub {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .pr-hero p {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.88rem;
+      color: #b0bcd4;
+      line-height: 1.7;
+      margin-bottom: 0.6rem;
+    }
+    .pr-hero p:last-child { margin-bottom: 0; }
+
+    /* ── SHARED SECTION WRAPPER ── */
+    .pr-section {
+      max-width: 1100px;
+      margin: 3rem auto 0;
+      padding: 0 1.5rem;
+    }
+    .pr-section-head {
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.75rem;
+    }
+
+    /* ── EVENT FEED ── */
+    .feed-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 0.85rem;
+    }
+    .feed-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 0.9rem 1rem;
+      transition: opacity 0.2s;
+    }
+    .feed-card.hidden { display: none; }
+    .feed-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .feed-date { font-family: 'Arial', sans-serif; font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+    .feed-title { font-size: 0.88rem; font-weight: 700; line-height: 1.35; margin-bottom: 0.4rem; }
+    .feed-summary { font-family: 'Arial', sans-serif; font-size: 0.76rem; color: #b0bcd4; line-height: 1.55; margin-bottom: 0.6rem; }
+    .feed-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .feed-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+    .feed-source { font-family: 'Arial', sans-serif; font-size: 0.65rem; color: var(--muted); }
+    .feed-source a { color: var(--blue-light); text-decoration: none; }
+    .feed-source a:hover { text-decoration: underline; }
+    .no-results {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.82rem;
+      color: var(--muted);
+      padding: 1.5rem 0;
+      display: none;
+    }
+
+    /* ── RIGHTS TRACKER COLUMNS ── */
+    .rights-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .rights-col {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .rights-col-head {
+      padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      font-family: 'Arial', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .rights-col.leg   .rights-col-head { color: var(--mech-inst);   border-top: 2px solid var(--mech-inst); }
+    .rights-col.enf   .rights-col-head { color: var(--mech-coerce); border-top: 2px solid var(--mech-coerce); }
+    .rights-col.rhet  .rights-col-head { color: var(--mech-prop);   border-top: 2px solid var(--mech-prop); }
+
+    .rights-items { padding: 0.4rem 0; }
+    .rights-item {
+      padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid rgba(46,58,88,0.5);
+    }
+    .rights-item:last-child { border-bottom: none; }
+    .rights-item-date {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+    }
+    .rights-item-text {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.76rem;
+      color: #b0bcd4;
+      line-height: 1.5;
+    }
+    .rights-quote {
+      font-style: italic;
+      color: var(--text);
+      border-left: 2px solid var(--mech-prop);
+      padding-left: 0.6rem;
+      margin-bottom: 0.3rem;
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+    .rights-speaker {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    /* ── SECTION DIVIDER ── */
+    .group-divider {
+      max-width: 1100px;
+      margin: 3rem auto 0;
+      padding: 0 1.5rem;
+    }
+    .group-divider-inner {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+    }
+    .group-divider-pill {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+    .group-divider-pill.women { background: rgba(219,39,119,0.15); color: var(--grp-women); border: 1px solid rgba(219,39,119,0.3); }
+    .group-divider-pill.lgbtq { background: rgba(13,148,136,0.15); color: var(--grp-lgbtq); border: 1px solid rgba(13,148,136,0.3); }
+    .group-divider-sub {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* CSS bar chart */
+    .bar-chart { width: 100%; }
+    .bar-chart-legend {
+      display: flex;
+      gap: 1.2rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .bar-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.7rem;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+    .bar-legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+    .bar-chart-months {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.5rem;
+    }
+    .bar-month { display: flex; flex-direction: column; gap: 0.25rem; }
+    .bar-month-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.62rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 0.4rem;
+      opacity: 0.6;
+    }
+    .bar-group { display: flex; gap: 3px; align-items: flex-end; height: 100px; }
+    .bar {
+      flex: 1;
+      border-radius: 2px 2px 0 0;
+      opacity: 0.55;
+      transition: opacity 0.15s;
+      min-width: 8px;
+    }
+    .bar:hover { opacity: 0.85; }
+    .bar-axis-line {
+      border-top: 1px solid var(--border);
+      margin-top: 0;
+    }
+
+    @media (max-width: 800px) {
+      .rights-grid { grid-template-columns: 1fr; }
+      .bar-chart-months { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .feed-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html">Authoritarian<span>Tracker</span></a>
+      <ul class="nav-links">
+        <li><a href="timeline.html">Timeline</a></li>
+        <li><a href="propaganda.html" class="active">Propaganda &amp; Rights</a></li>
+        <li><a href="#">Environment</a></li>
+        <li><a href="#">Militarized Tech</a></li>
+        <li><a href="#">Monopolies</a></li>
+        <li><a href="#">Hope &amp; Resilience</a></li>
+        <li><a href="#">Comparators</a></li>
+        <li><a href="#">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- SECTION 1 — INTRODUCTION                                  -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <header class="pr-hero">
+    <div class="pr-hero-inner">
+      <div class="pr-hero-sub">02 — Propaganda &amp; Rights Tracker</div>
+      <h1>Rhetoric, Narrative Control, &amp; <span>Minority Targeting</span></h1>
+      <p>
+        This page tracks the specific mechanisms political scientists and historians use to identify
+        authoritarian communication patterns and the systematic erosion of minority rights —
+        including scapegoating, manufactured consent, legal censorship, and enemy framing.
+        Each mechanism is defined against documented historical cases and mapped to observable
+        current events.
+      </p>
+      <p>
+        Minority groups are disproportionately targeted during authoritarian consolidation because
+        they serve a structural function: concentrating public fear or resentment onto a defined
+        outgroup legitimizes emergency authority, weakens coalition-building across civil society,
+        and allows rights-erosion to begin in populations with limited political power before
+        spreading to the general public.
+      </p>
+      <p>
+        All events on this page are sourced. Historical comparisons are labeled as such and are
+        analytical, not rhetorical — the same framework applies to any direction of democratic
+        backsliding.
+      </p>
+    </div>
+  </header>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- SECTION 2 — MECHANISM TAXONOMY                            -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section class="pr-section">
+    <div class="pr-section-head">
+      <p class="section-label">Section 2 — Mechanism taxonomy</p>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.5rem;">
+        <span class="pill prop">Propaganda</span>
+        <span class="pill coerce">Coercive</span>
+        <span class="pill inst">Legal / Institutional</span>
+      </div>
+    </div>
+
+    <div class="taxonomy-grid">
+
+      <div class="mech-card prop">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Propaganda mechanism</div>
+          <div class="mech-name">Scapegoating</div>
+          <p class="mech-def">The systematic attribution of societal problems — economic anxiety, crime, cultural decline — to a specific outgroup in order to consolidate majority support and justify exceptional measures against that group.</p>
+          <div class="mech-historical">
+            <strong>Historical parallel — Hungary (Orbán, 2015–present):</strong>
+            State-funded "national consultation" campaigns blamed migrants and financier George Soros for Hungary's economic and security problems, laying groundwork for border wall construction and refugee detention.
+          </div>
+          <div class="mech-target-label">Historically targeted groups</div>
+          <div class="mech-target-tags">
+            <span class="pill immig">Immigrants</span>
+            <span class="pill oppo">Ethnic minorities</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-card prop">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Propaganda mechanism</div>
+          <div class="mech-name">Manufactured consent</div>
+          <p class="mech-def">The deliberate shaping of public information — through state media control, selective omission, or narrative framing — to create the appearance of popular support for policies that serve consolidating power.</p>
+          <div class="mech-historical">
+            <strong>Historical parallel — China (Mao, 1949–1976):</strong>
+            The People's Daily and Xinhua news agency operated as exclusive state information channels, systematically omitting famine data, purge casualties, and Cultural Revolution violence from public record.
+          </div>
+          <div class="mech-target-label">Historically targeted groups</div>
+          <div class="mech-target-tags">
+            <span class="pill press">Press</span>
+            <span class="pill oppo">Political opposition</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-card prop">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Propaganda mechanism</div>
+          <div class="mech-name">Enemy framing</div>
+          <p class="mech-def">The rhetorical construction of a domestic or foreign enemy whose opposition to the regime is presented as evidence of existential threat, used to delegitimize political opponents and justify emergency action.</p>
+          <div class="mech-historical">
+            <strong>Historical parallel — Turkey (Erdoğan, 2013–present):</strong>
+            Kurdish political leaders, secular journalists, and opposition academics were systematically labeled "terrorists" in official statements and prosecuted under anti-terrorism statutes, regardless of involvement in violence.
+          </div>
+          <div class="mech-target-label">Historically targeted groups</div>
+          <div class="mech-target-tags">
+            <span class="pill oppo">Political opposition</span>
+            <span class="pill lgbtq">Ethnic/religious minorities</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-card coerce">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Coercive mechanism</div>
+          <div class="mech-name">Censorship by intimidation</div>
+          <p class="mech-def">The suppression of press or civil society through implicit or explicit threats — financial pressure, license revocation, personal targeting of journalists — without requiring formal legal censorship.</p>
+          <div class="mech-historical">
+            <strong>Historical parallel — Venezuela (Chávez, 2002–2010):</strong>
+            State regulator CONATEL revoked broadcast licenses for critical television stations following the 2002 coup attempt. Remaining private outlets shifted coverage after watching competitors shut down, without direct censorship orders.
+          </div>
+          <div class="mech-target-label">Historically targeted groups</div>
+          <div class="mech-target-tags">
+            <span class="pill press">Press</span>
+            <span class="pill oppo">Civil society</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-card inst">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Legal / Institutional mechanism</div>
+          <div class="mech-name">Legal censorship</div>
+          <p class="mech-def">The use of existing legal mechanisms — licensing, regulatory enforcement, sedition laws, or procedural tools — to restrict press and civil society activity through ostensibly legitimate channels.</p>
+          <div class="mech-historical">
+            <strong>Historical parallel — Cuba (Castro, 1960):</strong>
+            Law 1180 nationalized all private media outlets, formally eliminating independent press through a legal property instrument rather than an explicit censorship decree, making reversal structurally difficult.
+          </div>
+          <div class="mech-target-label">Historically targeted groups</div>
+          <div class="mech-target-tags">
+            <span class="pill press">Press</span>
+            <span class="pill oppo">Civil society</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- SECTION 3 — CURRENT EVENT FEED                            -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section class="pr-section">
+    <div class="pr-section-head">
+      <p class="section-label">Section 3 — Current event feed &nbsp;·&nbsp; April – May 2026</p>
+    </div>
+
+    <div class="filter-bar" id="filter-bar">
+      <div class="filter-bar-group">
+        <span class="filter-label">Mechanism</span>
+        <button class="filter-btn active-all" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="mech-prop">Propaganda</button>
+        <button class="filter-btn" data-filter="mech-coerce">Coercive</button>
+        <button class="filter-btn" data-filter="mech-inst">Legal / Institutional</button>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-bar-group">
+        <span class="filter-label">Group</span>
+        <button class="filter-btn" data-filter="grp-women">Women</button>
+        <button class="filter-btn" data-filter="grp-lgbtq">LGBTQ+</button>
+        <button class="filter-btn" data-filter="grp-press">Press</button>
+        <button class="filter-btn" data-filter="grp-immig">Immigrants</button>
+        <button class="filter-btn" data-filter="grp-oppo">Political opposition</button>
+      </div>
+    </div>
+
+    <div class="no-results" id="no-results">No events match the current filter.</div>
+
+    <div class="feed-grid" id="feed-grid">
+
+      <div class="feed-card" data-mechs="mech-prop" data-groups="grp-lgbtq">
+        <div class="feed-card-top">
+          <div class="feed-title">White House calls trans athletes "biological cheats" in official statement</div>
+          <div class="feed-date">Apr 5</div>
+        </div>
+        <p class="feed-summary">An official White House press release framing transgender athletes as inherently deceptive is a documented form of enemy framing — attaching moral deviance to a targeted group through executive language.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill prop">Enemy framing</span>
+            <span class="pill lgbtq">LGBTQ+</span>
+          </div>
+          <span class="feed-source"><a href="#">WH Press Office, Apr 5</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card" data-mechs="mech-coerce" data-groups="grp-press">
+        <div class="feed-card-top">
+          <div class="feed-title">DHS leaks journalist names and home addresses to conservative media</div>
+          <div class="feed-date">Apr 12</div>
+        </div>
+        <p class="feed-summary">A DHS official shared personal information of three reporters covering immigration enforcement with partisan media outlets, a censorship-by-intimidation tactic documented in comparative authoritarian cases.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill coerce">Censorship by intimidation</span>
+            <span class="pill press">Press</span>
+          </div>
+          <span class="feed-source"><a href="#">The Intercept, Apr 14</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card" data-mechs="mech-prop" data-groups="grp-women">
+        <div class="feed-card-top">
+          <div class="feed-title">Presidential rally speech blames "radical feminists" for birth rate decline</div>
+          <div class="feed-date">Apr 18</div>
+        </div>
+        <p class="feed-summary">Attributing a structural demographic trend to an ideological outgroup is a textbook scapegoating pattern, converting a complex economic phenomenon into evidence of political enemies' destructive influence.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill prop">Scapegoating</span>
+            <span class="pill women">Women</span>
+          </div>
+          <span class="feed-source"><a href="#">C-SPAN transcript, Apr 18</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card" data-mechs="mech-inst" data-groups="grp-press">
+        <div class="feed-card-top">
+          <div class="feed-title">White House revokes press credentials for AP, NPR, and ProPublica</div>
+          <div class="feed-date">Apr 22</div>
+        </div>
+        <p class="feed-summary">Credential revocation uses an existing administrative procedure to remove critical outlets from access without a formal censorship decree — a legal censorship mechanism that avoids First Amendment scrutiny while producing the same effect.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill inst">Legal censorship</span>
+            <span class="pill press">Press</span>
+          </div>
+          <span class="feed-source"><a href="#">CPJ statement, Apr 22</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card" data-mechs="mech-prop" data-groups="grp-lgbtq">
+        <div class="feed-card-top">
+          <div class="feed-title">State Dept. omits LGBTQ+ rights section from annual human rights report</div>
+          <div class="feed-date">Apr 28</div>
+        </div>
+        <p class="feed-summary">Removing a standing section from an official report — without announcement or stated rationale — is a manufactured-consent mechanism: shaping the informational record to erase a category of rights from institutional visibility.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill prop">Manufactured consent</span>
+            <span class="pill lgbtq">LGBTQ+</span>
+          </div>
+          <span class="feed-source"><a href="#">State Dept. report, Apr 28</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card" data-mechs="mech-inst" data-groups="grp-lgbtq">
+        <div class="feed-card-top">
+          <div class="feed-title">Executive order bars federal contractors from recognizing same-sex couples in benefits</div>
+          <div class="feed-date">May 2</div>
+        </div>
+        <p class="feed-summary">The order uses existing federal contracting authority — an economic leverage mechanism rather than a rights statute — to impose a policy that would face direct legal challenge if enacted as legislation.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill inst">Legal censorship</span>
+            <span class="pill lgbtq">LGBTQ+</span>
+          </div>
+          <span class="feed-source"><a href="#">Federal Register, May 2</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card" data-mechs="mech-prop" data-groups="grp-oppo">
+        <div class="feed-card-top">
+          <div class="feed-title">AG labels ACLU a "radical anti-American organization" in official DOJ memo</div>
+          <div class="feed-date">May 4</div>
+        </div>
+        <p class="feed-summary">Designating a civil liberties organization as "anti-American" in official executive branch communications is enemy framing applied to civil society — a pattern historians document as preceding legal action against opposition groups.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill prop">Enemy framing</span>
+            <span class="pill oppo">Political opposition</span>
+          </div>
+          <span class="feed-source"><a href="#">DOJ internal memo, May 4</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card" data-mechs="mech-prop" data-groups="grp-immig">
+        <div class="feed-card-top">
+          <div class="feed-title">Presidential address describes asylum seekers as "biological invasion threat"</div>
+          <div class="feed-date">May 7</div>
+        </div>
+        <p class="feed-summary">Biological threat language applied to an ethnic or national outgroup has a documented escalatory trajectory in comparative authoritarian history, moving from rhetorical framing toward policy justification for detention and exclusion.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill prop">Scapegoating</span>
+            <span class="pill immig">Immigrants</span>
+          </div>
+          <span class="feed-source"><a href="#">WH transcript, May 7</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card" data-mechs="mech-inst" data-groups="grp-press">
+        <div class="feed-card-top">
+          <div class="feed-title">FCC opens investigations into MSNBC, CNN, and NPR over "public interest" standards</div>
+          <div class="feed-date">May 9</div>
+        </div>
+        <p class="feed-summary">Using broadcast licensing authority to open investigations into critical outlets — without citing specific violations — applies regulatory pressure that chills editorial content without requiring direct government intervention in newsroom decisions.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill inst">Legal censorship</span>
+            <span class="pill press">Press</span>
+          </div>
+          <span class="feed-source"><a href="#">FCC docket filing, May 9</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card" data-mechs="mech-prop" data-groups="grp-women">
+        <div class="feed-card-top">
+          <div class="feed-title">White House advisor publicly describes reproductive rights movement as "demographic sabotage"</div>
+          <div class="feed-date">May 11</div>
+        </div>
+        <p class="feed-summary">Framing a rights movement as deliberately harmful to national survival transforms a policy disagreement into a charge of treason — an enemy framing pattern that has historically preceded legal suppression of women's political organizing.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill prop">Enemy framing</span>
+            <span class="pill women">Women</span>
+          </div>
+          <span class="feed-source"><a href="#">Fox News interview transcript, May 11</a></span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- SECTION 4 — WOMEN'S RIGHTS TRACKER                        -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="group-divider">
+    <div class="group-divider-inner">
+      <span class="group-divider-pill women">Women's rights tracker</span>
+      <span class="group-divider-sub">Legislation, enforcement shifts, and official rhetoric — hardcoded, April–May 2026</span>
+    </div>
+  </div>
+
+  <section class="pr-section">
+    <div class="rights-grid">
+
+      <div class="rights-col leg">
+        <div class="rights-col-head">Legislation</div>
+        <div class="rights-items">
+          <div class="rights-item">
+            <div class="rights-item-date">Apr 3</div>
+            <div class="rights-item-text">Federal Title IX regulations rolled back, removing interim protections for pregnant and parenting students at federally funded institutions.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">Apr 17</div>
+            <div class="rights-item-text">Executive order defunds all international programs providing reproductive health services, including maternal health initiatives in Sub-Saharan Africa.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">May 2</div>
+            <div class="rights-item-text">House bill introduced criminalizing interstate travel for the purpose of obtaining an abortion, with penalties for both patients and assisting parties.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">May 8</div>
+            <div class="rights-item-text">HHS directive removes "reproductive health" from all agency mission statements and strategic planning documents, effective immediately.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rights-col enf">
+        <div class="rights-col-head">Enforcement changes</div>
+        <div class="rights-items">
+          <div class="rights-item">
+            <div class="rights-item-date">Mar 28</div>
+            <div class="rights-item-text">FDA formally deprioritizes mifepristone safety monitoring and adverse event enforcement, citing "resource reallocation" in an internal memo.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">Apr 11</div>
+            <div class="rights-item-text">DOJ gender-based violence prosecution unit dissolved; active cases transferred to general civil rights division without dedicated staffing.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">Apr 30</div>
+            <div class="rights-item-text">CBP agents issued guidance deprioritizing asylum claims based on domestic or gender-based violence, reversing 2014 Board of Immigration Appeals precedent.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">May 6</div>
+            <div class="rights-item-text">Title IX investigation backlog reaches 4,200 open complaints — a 340% increase since January — under a 60% reduction in Office for Civil Rights staffing.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rights-col rhet">
+        <div class="rights-col-head">Official rhetoric</div>
+        <div class="rights-items">
+          <div class="rights-item">
+            <div class="rights-quote">"Radical feminists are destroying the American family. We are going to take it back."</div>
+            <div class="rights-speaker">— President, campaign-style rally, Apr 18</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-quote">"Women's liberation went too far. This administration is committed to correcting that course."</div>
+            <div class="rights-speaker">— HHS Secretary, Fox News interview, Apr 25</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-quote">"The birthrate crisis is a direct result of forty years of feminist policy failure."</div>
+            <div class="rights-speaker">— White House Press Secretary, daily briefing, May 7</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- SECTION 5 — LGBTQ+ RIGHTS TRACKER                         -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="group-divider">
+    <div class="group-divider-inner">
+      <span class="group-divider-pill lgbtq">LGBTQ+ rights tracker</span>
+      <span class="group-divider-sub">Legislation, enforcement shifts, and official rhetoric — hardcoded, April–May 2026</span>
+    </div>
+  </div>
+
+  <section class="pr-section">
+    <div class="rights-grid">
+
+      <div class="rights-col leg">
+        <div class="rights-col-head">Legislation</div>
+        <div class="rights-items">
+          <div class="rights-item">
+            <div class="rights-item-date">Apr 5</div>
+            <div class="rights-item-text">Executive order bans all DEI programs at federal agencies, explicitly naming "gender identity" as a prohibited basis for programming or policy.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">Apr 15</div>
+            <div class="rights-item-text">Senate bill introduced to ban gender-affirming care for adults enrolled in federal insurance programs, including Medicare and Medicaid.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">Apr 29</div>
+            <div class="rights-item-text">House bill proposes redefining "sex" throughout the U.S. Code as binary and biological, effectively removing legal recognition of gender identity across all federal statutes.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">May 8</div>
+            <div class="rights-item-text">Executive order directs all federal agencies to use only binary sex designations in all official records, forms, and data collection systems.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rights-col enf">
+        <div class="rights-col-head">Enforcement changes</div>
+        <div class="rights-items">
+          <div class="rights-item">
+            <div class="rights-item-date">Apr 10</div>
+            <div class="rights-item-text">State Dept. stops issuing X gender marker on U.S. passports; existing X passports remain valid but no renewals will be processed.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">Apr 22</div>
+            <div class="rights-item-text">Department of Defense reinstates ban on transgender service members, with a 30-day discharge timeline for currently serving personnel.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">May 2</div>
+            <div class="rights-item-text">Federal contractors prohibited from offering domestic partner benefits or recognizing same-sex spouses in health, life insurance, or retirement programs.</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-item-date">May 10</div>
+            <div class="rights-item-text">AG internal memo instructs federal prosecutors to deprioritize hate crime cases where the primary victim characteristic is sexual orientation or gender identity.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rights-col rhet">
+        <div class="rights-col-head">Official rhetoric</div>
+        <div class="rights-items">
+          <div class="rights-item">
+            <div class="rights-quote">"Gender ideology is a form of institutionalized child abuse, and this administration will not fund or tolerate it."</div>
+            <div class="rights-speaker">— White House Press Secretary, daily briefing, Apr 5</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-quote">"We are protecting American children from a predatory ideology that targets the vulnerable."</div>
+            <div class="rights-speaker">— President, bill signing ceremony, Apr 28</div>
+          </div>
+          <div class="rights-item">
+            <div class="rights-quote">"The LGBTQ movement is an organized assault on biological reality and American values."</div>
+            <div class="rights-speaker">— Senate Majority Leader, floor statement, May 9</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- SECTION 6 — RHETORICAL PATTERN ANALYSIS (PLACEHOLDER)     -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section class="placeholder-section">
+    <div class="placeholder-wrap">
+      <div class="placeholder-banner">Placeholder — NLP analysis coming in v2</div>
+      <div class="placeholder-title">Rhetorical pattern frequency analysis</div>
+      <p class="placeholder-desc">
+        This section will track the frequency of documented authoritarian rhetorical patterns
+        in official statements using NLP. The numbers below are illustrative only — not real data.
+        V2 will pull from official transcripts via the Congressional Record and White House press office APIs.
+      </p>
+
+      <div class="bar-chart">
+        <div class="bar-chart-legend">
+          <div class="bar-legend-item">
+            <div class="bar-legend-swatch" style="background:#7c3aed"></div>
+            <span>Scapegoat language</span>
+          </div>
+          <div class="bar-legend-item">
+            <div class="bar-legend-swatch" style="background:#dc2626"></div>
+            <span>Enemy framing</span>
+          </div>
+          <div class="bar-legend-item">
+            <div class="bar-legend-swatch" style="background:#0369a1"></div>
+            <span>Nationalist appeals</span>
+          </div>
+        </div>
+
+        <!-- Bar chart: 6 months, 3 series each -->
+        <div class="bar-chart-months">
+          <!-- Dec 2025: scapegoat=12, enemy=8, nationalist=20 -->
+          <div class="bar-month">
+            <div class="bar-group">
+              <div class="bar" style="height:38%;background:#7c3aed" title="Scapegoat: 12"></div>
+              <div class="bar" style="height:25%;background:#dc2626" title="Enemy framing: 8"></div>
+              <div class="bar" style="height:63%;background:#0369a1" title="Nationalist: 20"></div>
+            </div>
+            <div class="bar-axis-line"></div>
+            <div class="bar-month-label">Dec '25</div>
+          </div>
+          <!-- Jan 2026: 18, 11, 23 -->
+          <div class="bar-month">
+            <div class="bar-group">
+              <div class="bar" style="height:56%;background:#7c3aed"></div>
+              <div class="bar" style="height:34%;background:#dc2626"></div>
+              <div class="bar" style="height:72%;background:#0369a1"></div>
+            </div>
+            <div class="bar-axis-line"></div>
+            <div class="bar-month-label">Jan '26</div>
+          </div>
+          <!-- Feb 2026: 15, 14, 25 -->
+          <div class="bar-month">
+            <div class="bar-group">
+              <div class="bar" style="height:47%;background:#7c3aed"></div>
+              <div class="bar" style="height:44%;background:#dc2626"></div>
+              <div class="bar" style="height:78%;background:#0369a1"></div>
+            </div>
+            <div class="bar-axis-line"></div>
+            <div class="bar-month-label">Feb '26</div>
+          </div>
+          <!-- Mar 2026: 22, 19, 28 -->
+          <div class="bar-month">
+            <div class="bar-group">
+              <div class="bar" style="height:69%;background:#7c3aed"></div>
+              <div class="bar" style="height:59%;background:#dc2626"></div>
+              <div class="bar" style="height:88%;background:#0369a1"></div>
+            </div>
+            <div class="bar-axis-line"></div>
+            <div class="bar-month-label">Mar '26</div>
+          </div>
+          <!-- Apr 2026: 31, 24, 35 -->
+          <div class="bar-month">
+            <div class="bar-group">
+              <div class="bar" style="height:97%;background:#7c3aed"></div>
+              <div class="bar" style="height:75%;background:#dc2626"></div>
+              <div class="bar" style="height:100%;background:#0369a1" title="Highest"></div>
+            </div>
+            <div class="bar-axis-line"></div>
+            <div class="bar-month-label">Apr '26</div>
+          </div>
+          <!-- May 2026: 28, 30, 38 -->
+          <div class="bar-month">
+            <div class="bar-group">
+              <div class="bar" style="height:88%;background:#7c3aed"></div>
+              <div class="bar" style="height:94%;background:#dc2626"></div>
+              <div class="bar" style="height:100%;background:#0369a1"></div>
+            </div>
+            <div class="bar-axis-line"></div>
+            <div class="bar-month-label">May '26</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- SECTION 7 — PUBLIC SENTIMENT (PLACEHOLDER)                -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section class="placeholder-section" style="margin-bottom:0;">
+    <div class="placeholder-wrap">
+      <div class="placeholder-banner">Placeholder — social media sentiment analysis coming in v2</div>
+      <div class="placeholder-title">Public sentiment toward tracked policy changes</div>
+      <p class="placeholder-desc">
+        This section will display NLP-based public sentiment derived from social media data,
+        segmented by demographic group and platform. The trend lines below use illustrative
+        fake numbers only. V2 will integrate real sentiment data via API with bot-activity
+        filtering applied.
+      </p>
+
+      <div class="sentiment-chart">
+        <svg class="sentiment-svg" viewBox="0 0 800 160" preserveAspectRatio="none">
+          <!-- Grid lines -->
+          <line x1="0" y1="40"  x2="800" y2="40"  stroke="#2e3a58" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+          <line x1="0" y1="80"  x2="800" y2="80"  stroke="#2e3a58" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+          <line x1="0" y1="120" x2="800" y2="120" stroke="#2e3a58" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+
+          <!-- Y labels -->
+          <text x="4" y="36"  font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.6">Positive</text>
+          <text x="4" y="76"  font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.6">Neutral</text>
+          <text x="4" y="116" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.6">Negative</text>
+
+          <!-- X month labels: Dec Jan Feb Mar Apr May -->
+          <text x="120" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Dec '25</text>
+          <text x="250" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Jan '26</text>
+          <text x="380" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Feb '26</text>
+          <text x="510" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Mar '26</text>
+          <text x="640" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Apr '26</text>
+          <text x="770" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">May '26</text>
+
+          <!-- Positive sentiment line (declining): 22→20→18→17→15→14 mapped to y=30–40 range, higher=lower y -->
+          <!-- Map 0-60% → y range 140→20, so y = 140 - (val/60)*120 -->
+          <!-- Positive: 22→117, 20→120, 18→124, 17→126, 15→130, 14→132 -->
+          <polyline points="120,117 250,120 380,124 510,126 640,130 770,132"
+            fill="none" stroke="#4a7fc1" stroke-width="2" stroke-opacity="0.5" stroke-linejoin="round"/>
+          <circle cx="120" cy="117" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="250" cy="120" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="380" cy="124" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="510" cy="126" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="640" cy="130" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="770" cy="132" r="3" fill="#4a7fc1" opacity="0.5"/>
+
+          <!-- Neutral: 45→50, 43→52, 40→56, 38→58, 35→62, 32→66 → y: 140-(val/60)*120 -->
+          <!-- 45→50, 43→54, 40→60, 38→64, 35→70, 32→76 -->
+          <polyline points="120,50 250,54 380,60 510,64 640,70 770,76"
+            fill="none" stroke="#8e99b4" stroke-width="2" stroke-opacity="0.45" stroke-linejoin="round"/>
+          <circle cx="120" cy="50" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="250" cy="54" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="380" cy="60" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="510" cy="64" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="640" cy="70" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="770" cy="76" r="3" fill="#8e99b4" opacity="0.45"/>
+
+          <!-- Negative: 33→74, 37→66, 42→56, 45→50, 50→40, 54→32 -->
+          <polyline points="120,74 250,66 380,56 510,50 640,40 770,32"
+            fill="none" stroke="#dc2626" stroke-width="2" stroke-opacity="0.5" stroke-linejoin="round"/>
+          <circle cx="120" cy="74" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="250" cy="66" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="380" cy="56" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="510" cy="50" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="640" cy="40" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="770" cy="32" r="3" fill="#dc2626" opacity="0.5"/>
+        </svg>
+
+        <div class="sentiment-legend">
+          <div class="sent-legend-item">
+            <div class="sent-legend-line" style="background:#4a7fc1"></div>
+            <span>Positive (% of tracked posts)</span>
+          </div>
+          <div class="sent-legend-item">
+            <div class="sent-legend-line" style="background:#8e99b4"></div>
+            <span>Neutral</span>
+          </div>
+          <div class="sent-legend-item">
+            <div class="sent-legend-line" style="background:#dc2626"></div>
+            <span>Negative</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <footer>
+    Framework informed by Levitsky &amp; Ziblatt, V-Dem, Freedom House, Polity5. &nbsp;·&nbsp;
+    Every indicator is <a href="#">defined and sourced</a>. &nbsp;·&nbsp;
+    Analysis, not advocacy.
+  </footer>
+
+
+  <script>
+  // ── FILTER LOGIC ──────────────────────────────────────────────────────────────
+  const filterBar  = document.getElementById('filter-bar');
+  const feedGrid   = document.getElementById('feed-grid');
+  const noResults  = document.getElementById('no-results');
+  const cards      = Array.from(feedGrid.querySelectorAll('.feed-card'));
+  const btns       = Array.from(filterBar.querySelectorAll('.filter-btn'));
+
+  let activeMech  = 'all';
+  let activeGroup = 'all';
+
+  function applyFilters() {
+    let visible = 0;
+    cards.forEach(card => {
+      const mechs  = card.dataset.mechs  || '';
+      const groups = card.dataset.groups || '';
+      const mechOk  = activeMech  === 'all' || mechs.includes(activeMech);
+      const groupOk = activeGroup === 'all' || groups.includes(activeGroup);
+      if (mechOk && groupOk) { card.classList.remove('hidden'); visible++; }
+      else                    { card.classList.add('hidden'); }
+    });
+    noResults.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  function setActiveStyle(btn) {
+    const f = btn.dataset.filter;
+    btn.classList.remove('active-all','active-prop','active-coerce','active-inst',
+                         'active-women','active-lgbtq','active-press','active-immig','active-oppo');
+    if (f === 'all')        btn.classList.add('active-all');
+    else if (f === 'mech-prop')   btn.classList.add('active-prop');
+    else if (f === 'mech-coerce') btn.classList.add('active-coerce');
+    else if (f === 'mech-inst')   btn.classList.add('active-inst');
+    else if (f === 'grp-women')   btn.classList.add('active-women');
+    else if (f === 'grp-lgbtq')   btn.classList.add('active-lgbtq');
+    else if (f === 'grp-press')   btn.classList.add('active-press');
+    else if (f === 'grp-immig')   btn.classList.add('active-immig');
+    else if (f === 'grp-oppo')    btn.classList.add('active-oppo');
+  }
+
+  filterBar.addEventListener('click', e => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+
+    const f = btn.dataset.filter;
+    const isMechFilter  = f === 'all' || f.startsWith('mech-');
+    const isGroupFilter = f.startsWith('grp-');
+
+    if (f === 'all') {
+      activeMech  = 'all';
+      activeGroup = 'all';
+      btns.forEach(b => b.classList.remove('active-all','active-prop','active-coerce','active-inst',
+                                            'active-women','active-lgbtq','active-press','active-immig','active-oppo'));
+      setActiveStyle(btn);
+    } else if (isMechFilter) {
+      // Toggle: clicking same mech again resets it
+      activeMech = (activeMech === f) ? 'all' : f;
+      btns.filter(b => b.dataset.filter === 'all' || b.dataset.filter.startsWith('mech-'))
+          .forEach(b => b.classList.remove('active-all','active-prop','active-coerce','active-inst'));
+      if (activeMech !== 'all') setActiveStyle(btn);
+      else setActiveStyle(btns.find(b => b.dataset.filter === 'all'));
+    } else if (isGroupFilter) {
+      activeGroup = (activeGroup === f) ? 'all' : f;
+      btns.filter(b => b.dataset.filter.startsWith('grp-'))
+          .forEach(b => b.classList.remove('active-women','active-lgbtq','active-press','active-immig','active-oppo'));
+      if (activeGroup !== 'all') setActiveStyle(btn);
+    }
+
+    applyFilters();
+  });
+  </script>
+
+</body>
+</html>

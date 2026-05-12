@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline — Authoritarian Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    /* ── TIMELINE PAGE STYLES ── */
+    .tl-hero {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1.5rem 2rem;
+      text-align: center;
+    }
+    .tl-hero h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: 0.02em; }
+    .tl-hero h1 span { color: var(--blue-light); }
+    .tl-hero p {
+      max-width: 580px;
+      margin: 0.6rem auto 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      font-family: 'Arial', sans-serif;
+    }
+
+    /* ── LEGEND ── */
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0 0;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .legend-item .label { color: var(--muted); }
+    .legend-item .sublabel { color: var(--muted); opacity: 0.65; margin-left: 0.2rem; font-size: 0.68rem; }
+
+    /* ── CHART SECTION ── */
+    .chart-section {
+      max-width: 1100px;
+      margin: 2.5rem auto 0;
+      padding: 0 1.5rem;
+    }
+    .chart-wrap {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.25rem 1rem 1rem;
+      overflow-x: auto;
+    }
+    #scatter { display: block; width: 100%; }
+
+    /* D3 elements */
+    .axis-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 11px;
+      fill: var(--muted);
+    }
+    .grid line { stroke: var(--border); stroke-dasharray: 3 3; stroke-opacity: 0.6; }
+    .grid path { stroke: none; }
+    .band-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ── TOOLTIP ── */
+    #tooltip {
+      position: fixed;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s;
+      background: var(--navy);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.7rem 0.9rem;
+      max-width: 260px;
+      z-index: 200;
+      font-family: 'Arial', sans-serif;
+    }
+    #tooltip .tt-title { font-size: 0.8rem; font-weight: 700; color: var(--text); margin-bottom: 0.3rem; line-height: 1.3; }
+    #tooltip .tt-date  { font-size: 0.68rem; color: var(--muted); margin-bottom: 0.3rem; }
+    #tooltip .tt-theme {
+      display: inline-block;
+      font-size: 0.62rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.1rem 0.4rem;
+      border-radius: 2px;
+      margin-bottom: 0.4rem;
+    }
+    #tooltip .tt-summary { font-size: 0.75rem; color: #b0bcd4; line-height: 1.5; margin-bottom: 0.4rem; }
+    #tooltip .tt-source  { font-size: 0.68rem; color: var(--muted); }
+
+    /* ── VERTICAL TIMELINE ── */
+    .vtl-section {
+      max-width: 900px;
+      margin: 3.5rem auto 0;
+      padding: 0 1.5rem;
+    }
+    .vtl-section > .section-label { margin-bottom: 2rem; }
+
+    .vtl {
+      position: relative;
+      padding-bottom: 2rem;
+    }
+    .vtl::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .vtl-event {
+      position: relative;
+      width: 44%;
+      margin-bottom: 2rem;
+    }
+    .vtl-event.left  { left: 0;    margin-right: auto; }
+    .vtl-event.right { left: 56%;  margin-left: 0; }
+
+    /* connector dot on the spine */
+    .vtl-event::after {
+      content: '';
+      position: absolute;
+      top: 1rem;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+    }
+    .vtl-event.left::after  { right: -6%; transform: translateX(50%); }
+    .vtl-event.right::after { left: -6%;  transform: translateX(-50%); }
+
+    .vtl-event.phase1::after { background: var(--phase1); }
+    .vtl-event.phase2::after { background: var(--phase2); }
+    .vtl-event.phase3::after { background: var(--phase3); }
+
+    /* connector horizontal line to the spine */
+    .vtl-event.left .vtl-connector {
+      position: absolute;
+      top: calc(1rem + 4px);
+      right: -6%;
+      width: 6%;
+      height: 2px;
+    }
+    .vtl-event.right .vtl-connector {
+      position: absolute;
+      top: calc(1rem + 4px);
+      left: -6%;
+      width: 6%;
+      height: 2px;
+    }
+    .vtl-event.phase1 .vtl-connector { background: var(--phase1); opacity: 0.4; }
+    .vtl-event.phase2 .vtl-connector { background: var(--phase2); opacity: 0.4; }
+    .vtl-event.phase3 .vtl-connector { background: var(--phase3); opacity: 0.4; }
+
+    /* card */
+    .vtl-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .vtl-event.phase1 .vtl-card { border-top: 2px solid var(--phase1); }
+    .vtl-event.phase2 .vtl-card { border-top: 2px solid var(--phase2); }
+    .vtl-event.phase3 .vtl-card { border-top: 2px solid var(--phase3); }
+
+    .vtl-card:hover { box-shadow: 0 2px 16px rgba(0,0,0,0.4); }
+
+    .vtl-card-head {
+      padding: 0.65rem 0.85rem;
+    }
+    .vtl-card-date {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.25rem;
+    }
+    .vtl-event.phase1 .vtl-card-date { color: var(--phase1); }
+    .vtl-event.phase2 .vtl-card-date { color: var(--phase2); }
+    .vtl-event.phase3 .vtl-card-date { color: var(--phase3); }
+
+    .vtl-card-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--text);
+    }
+
+    /* expand indicator */
+    .vtl-card-toggle {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.6rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      opacity: 0.7;
+    }
+
+    .vtl-card-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.2s ease;
+      padding: 0 0.85rem;
+    }
+    .vtl-card.open .vtl-card-body {
+      max-height: 200px;
+      padding: 0 0.85rem 0.75rem;
+    }
+    .vtl-card.open .vtl-card-toggle { display: none; }
+
+    .vtl-card-summary {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.75rem;
+      color: #b0bcd4;
+      line-height: 1.55;
+      margin-bottom: 0.5rem;
+    }
+    .vtl-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .vtl-card-theme {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 0.1rem 0.4rem;
+      border-radius: 2px;
+    }
+    .vtl-event.phase1 .vtl-card-theme { background: var(--phase1-dim); color: var(--phase1); border: 1px solid rgba(74,127,193,0.3); }
+    .vtl-event.phase2 .vtl-card-theme { background: var(--phase2-dim); color: var(--phase2); border: 1px solid rgba(212,160,23,0.3); }
+    .vtl-event.phase3 .vtl-card-theme { background: var(--phase3-dim); color: var(--phase3); border: 1px solid rgba(192,57,43,0.3); }
+
+    .vtl-card-source {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+    .vtl-card-source a { color: var(--blue-light); text-decoration: none; }
+    .vtl-card-source a:hover { text-decoration: underline; }
+
+    /* ── CLASSIFICATION FRAMEWORK ── */
+    .framework-section {
+      max-width: 900px;
+      margin: 4rem auto 0;
+      padding: 0 1.5rem;
+    }
+
+    .framework-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+
+    .framework-phase {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .framework-phase-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .framework-phase-header .phase-num {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+
+    .framework-phase-header h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+
+    .framework-phase-header p {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .framework-phase.p1 .framework-phase-header { border-top: 3px solid var(--phase1); }
+    .framework-phase.p2 .framework-phase-header { border-top: 3px solid var(--phase2); }
+    .framework-phase.p3 .framework-phase-header { border-top: 3px solid var(--phase3); }
+
+    .framework-phase.p1 .phase-num { color: var(--phase1); }
+    .framework-phase.p2 .phase-num { color: var(--phase2); }
+    .framework-phase.p3 .phase-num { color: var(--phase3); }
+
+    .framework-indicators {
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .framework-indicator {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.75rem;
+    }
+
+    .framework-indicator .ind-label {
+      font-weight: 700;
+      color: var(--text);
+      display: block;
+      margin-bottom: 0.1rem;
+    }
+
+    .framework-indicator .ind-detail {
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.7rem;
+    }
+
+    @media (max-width: 760px) {
+      .framework-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 680px) {
+      .vtl::before { left: 12px; }
+      .vtl-event { width: calc(100% - 36px); left: 36px !important; margin-left: 0; }
+      .vtl-event::after { left: -24px !important; right: auto !important; transform: none; }
+      .vtl-event .vtl-connector { left: -24px !important; right: auto !important; width: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html">Authoritarian<span>Tracker</span></a>
+      <ul class="nav-links">
+        <li><a href="timeline.html" class="active">Timeline</a></li>
+        <li><a href="#">Propaganda &amp; Rights</a></li>
+        <li><a href="#">Environment</a></li>
+        <li><a href="#">Militarized Tech</a></li>
+        <li><a href="#">Monopolies</a></li>
+        <li><a href="#">Hope &amp; Resilience</a></li>
+        <li><a href="#">Comparators</a></li>
+        <li><a href="#">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="tl-hero">
+    <h1>Event <span>Timeline</span></h1>
+    <p>Events logged April – May 2026, classified by phase of democratic backsliding.
+       Framework draws on V-Dem, Freedom House, and Polity5 indicators.</p>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#4a7fc1"></div>
+        <span class="label">Phase 1 — Preconditions</span>
+        <span class="sublabel">(structural vulnerabilities)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#d4a017"></div>
+        <span class="label">Phase 2 — Emergence</span>
+        <span class="sublabel">(visible authoritarian patterns)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#c0392b"></div>
+        <span class="label">Phase 3 — Consolidation</span>
+        <span class="sublabel">(power entrenchment)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SCATTERPLOT -->
+  <section class="chart-section">
+    <p class="section-label">Events by date and phase — hover a dot for details</p>
+    <div class="chart-wrap">
+      <svg id="scatter"></svg>
+    </div>
+  </section>
+
+  <!-- VERTICAL TIMELINE -->
+  <section class="vtl-section">
+    <p class="section-label">Chronological event log — click a card to expand</p>
+    <div class="vtl" id="vtl-container"></div>
+  </section>
+
+  <!-- CLASSIFICATION FRAMEWORK -->
+  <section class="framework-section">
+    <p class="section-label">Event classification framework</p>
+
+    <div class="framework-grid">
+
+      <div class="framework-phase p1">
+        <div class="framework-phase-header">
+          <div class="phase-num">Phase 1</div>
+          <h3>Preconditions</h3>
+          <p>Structural vulnerabilities that precede visible authoritarian emergence. Measurable, slow-moving.</p>
+        </div>
+        <div class="framework-indicators">
+          <div class="framework-indicator">
+            <span class="ind-label">Economic preconditions</span>
+            <span class="ind-detail">Inequality, unemployment shocks, deindustrialization, perceived relative deprivation</span>
+          </div>
+          <div class="framework-indicator">
+            <span class="ind-label">Social preconditions</span>
+            <span class="ind-detail">Polarization metrics, erosion of cross-party institutional trust, identity threat narratives</span>
+          </div>
+          <div class="framework-indicator">
+            <span class="ind-label">Institutional preconditions</span>
+            <span class="ind-detail">Norm erosion, gatekeeping failures, legislative abdication to executive</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="framework-phase p2">
+        <div class="framework-phase-header">
+          <div class="phase-num">Phase 2</div>
+          <h3>Emergence</h3>
+          <p>The active phase where authoritarian patterns become visible through specific mechanisms.</p>
+        </div>
+        <div class="framework-indicators">
+          <div class="framework-indicator">
+            <span class="ind-label">Leadership methods</span>
+            <span class="ind-detail">Charismatic appeal, manufactured crisis, scapegoating, emotional/nationalist rhetoric</span>
+          </div>
+          <div class="framework-indicator">
+            <span class="ind-label">Coercive mechanisms</span>
+            <span class="ind-detail">Paramilitary or law-enforcement weaponization, detention without due process, surveillance infrastructure</span>
+          </div>
+          <div class="framework-indicator">
+            <span class="ind-label">Narrative control</span>
+            <span class="ind-detail">Propaganda patterns, media delegitimization, information environment manipulation</span>
+          </div>
+          <div class="framework-indicator">
+            <span class="ind-label">Exploitation of existing systems</span>
+            <span class="ind-detail">Legal mechanisms used against their intent, procedural manipulation</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="framework-phase p3">
+        <div class="framework-phase-header">
+          <div class="phase-num">Phase 3</div>
+          <h3>Consolidation</h3>
+          <p>Structural changes that entrench power and make reversal harder.</p>
+        </div>
+        <div class="framework-indicators">
+          <div class="framework-indicator">
+            <span class="ind-label">Judiciary restructuring</span>
+            <span class="ind-detail">Court packing, removal of independent judges, constitutional reinterpretation</span>
+          </div>
+          <div class="framework-indicator">
+            <span class="ind-label">Legislative capture</span>
+            <span class="ind-detail">Supermajority consolidation, opposition suppression, electoral rule changes</span>
+          </div>
+          <div class="framework-indicator">
+            <span class="ind-label">Border and population control</span>
+            <span class="ind-detail">Movement restrictions, citizenship policy, minority targeting</span>
+          </div>
+          <div class="framework-indicator">
+            <span class="ind-label">Foreign policy as domestic tool</span>
+            <span class="ind-detail">Nationalist framing of international events for domestic legitimacy</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    Framework informed by Levitsky &amp; Ziblatt, V-Dem, Freedom House, Polity5. &nbsp;·&nbsp;
+    Every indicator is <a href="#">defined and sourced</a>. &nbsp;·&nbsp;
+    Analysis, not advocacy.
+  </footer>
+
+  <div id="tooltip"></div>
+
+  <script>
+  // ── EVENT DATA ──────────────────────────────────────────────────────────────
+  const events = [
+    {
+      id: 1,
+      date: "2026-04-03",
+      phase: 1,
+      theme: "Economic inequality",
+      title: "OMB suppresses annual federal poverty report",
+      summary: "The Office of Management and Budget quietly removed the Census Bureau's annual poverty and income report from its publication schedule, eliminating a key independent measure of economic precondition indicators.",
+      source: "https://example.com/omb-poverty-report"
+    },
+    {
+      id: 2,
+      date: "2026-04-09",
+      phase: 3,
+      theme: "Judiciary",
+      title: "Executive order directs DOJ to investigate judges blocking deportations",
+      summary: "A presidential executive order instructed the DOJ to open conduct reviews of federal judges who issued rulings blocking administration immigration policies, targeting judicial independence through existing procedural mechanisms.",
+      source: "https://example.com/doj-judges-eo"
+    },
+    {
+      id: 3,
+      date: "2026-04-14",
+      phase: 3,
+      theme: "Legislative capture",
+      title: "Senate confirms 12 judicial nominees in single session, bypassing ABA review",
+      summary: "The Senate confirmed a record 12 judicial nominees in one session without waiting for American Bar Association evaluations, accelerating the pace of federal court reshaping beyond established norms.",
+      source: "https://example.com/senate-nominees"
+    },
+    {
+      id: 4,
+      date: "2026-04-18",
+      phase: 1,
+      theme: "Institutional trust",
+      title: "Gallup survey records widest-ever partisan trust gap in federal institutions",
+      summary: "A Gallup poll found a 52-point gap in institutional trust between Democratic and Republican respondents — the largest recorded since the survey began — indicating deepening polarization as a structural precondition.",
+      source: "https://example.com/gallup-trust-gap"
+    },
+    {
+      id: 5,
+      date: "2026-04-22",
+      phase: 2,
+      theme: "Media delegitimization",
+      title: "White House bars three major outlets from press briefing room",
+      summary: "The White House press office revoked credentials for three national news organizations following critical coverage, citing unspecified 'inaccuracies' — a documented mechanism of authoritarian media control.",
+      source: "https://example.com/wh-press-ban"
+    },
+    {
+      id: 6,
+      date: "2026-04-28",
+      phase: 3,
+      theme: "Surveillance",
+      title: "Executive order restructures FISA court oversight, limits IG access",
+      summary: "An executive order reorganized Foreign Intelligence Surveillance Court reporting procedures, restricting Inspector General access to surveillance program reviews and reducing independent oversight capacity.",
+      source: "https://example.com/fisa-oversight"
+    },
+    {
+      id: 7,
+      date: "2026-05-01",
+      phase: 2,
+      theme: "Coercive mechanisms",
+      title: "ICE deploys military-grade vehicles in Chicago neighborhood sweep",
+      summary: "Immigration enforcement conducted a large-scale operation in a civilian residential neighborhood using MRAP armored vehicles, prompting legal challenges from the city and civil rights organizations.",
+      source: "https://example.com/ice-chicago"
+    },
+    {
+      id: 8,
+      date: "2026-05-05",
+      phase: 3,
+      theme: "Surveillance",
+      title: "DHS announces national biometric ID database integrating state DMV records",
+      summary: "The Department of Homeland Security announced a national biometric database consolidating facial recognition data from all 50 state DMVs, creating a de facto national ID infrastructure without congressional authorization.",
+      source: "https://example.com/dhs-biometric"
+    },
+    {
+      id: 9,
+      date: "2026-05-07",
+      phase: 2,
+      theme: "Scapegoating",
+      title: "Presidential address frames asylum seekers as 'biological invasion threat'",
+      summary: "In a nationally broadcast address, the president described asylum seekers as a 'biological invasion threat to the American bloodline' — language historians have documented as a precursor to population-targeting policy.",
+      source: "https://example.com/presidential-address"
+    },
+    {
+      id: 10,
+      date: "2026-05-10",
+      phase: 3,
+      theme: "Border & citizenship",
+      title: "Bill introduced to strip birthright citizenship for US-born children of undocumented immigrants",
+      summary: "Senate Republicans introduced legislation to end birthright citizenship for children born on US soil to undocumented parents, directly challenging the 14th Amendment and representing a structural consolidation mechanism.",
+      source: "https://example.com/birthright-bill"
+    }
+  ];
+
+  // ── PARSE DATES ─────────────────────────────────────────────────────────────
+  const parseDate = d3.timeParse("%Y-%m-%d");
+  const fmtDate   = d3.timeFormat("%b %d, %Y");
+  events.forEach(e => { e.dateObj = parseDate(e.date); });
+
+  const phaseColors = { 1: "#4a7fc1", 2: "#d4a017", 3: "#c0392b" };
+  const phaseLabels = { 1: "Phase 1 — Preconditions", 2: "Phase 2 — Emergence", 3: "Phase 3 — Consolidation" };
+
+  // ── SCATTERPLOT ──────────────────────────────────────────────────────────────
+  (function buildScatter() {
+    const container = document.querySelector(".chart-wrap");
+    const W = container.clientWidth - 2;  // -2 for border
+    const margin = { top: 30, right: 30, bottom: 50, left: 120 };
+    const H = 300;
+    const innerW = W - margin.left - margin.right;
+    const innerH = H - margin.top - margin.bottom;
+
+    const svg = d3.select("#scatter")
+      .attr("viewBox", `0 0 ${W} ${H}`)
+      .attr("height", H);
+
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Scales
+    const xDomain = [parseDate("2026-04-01"), parseDate("2026-05-14")];
+    const xScale = d3.scaleTime().domain(xDomain).range([0, innerW]);
+
+    // Y: three discrete bands
+    const yBands = ["Phase 1\nPreconditions", "Phase 2\nEmergence", "Phase 3\nConsolidation"];
+    const yScale = d3.scaleBand()
+      .domain([1, 2, 3])
+      .range([innerH, 0])
+      .padding(0.3);
+
+    // Band backgrounds
+    const bandBgs = [
+      { phase: 1, color: "rgba(74,127,193,0.06)" },
+      { phase: 2, color: "rgba(212,160,23,0.06)" },
+      { phase: 3, color: "rgba(192,57,43,0.06)" }
+    ];
+    bandBgs.forEach(b => {
+      g.append("rect")
+        .attr("x", 0)
+        .attr("y", yScale(b.phase))
+        .attr("width", innerW)
+        .attr("height", yScale.bandwidth())
+        .attr("fill", b.color);
+    });
+
+    // Grid lines
+    g.append("g").attr("class", "grid")
+      .call(d3.axisBottom(xScale).tickSize(innerH).tickFormat(""))
+      .attr("transform", "translate(0,0)")
+      .select(".domain").remove();
+
+    // X axis
+    g.append("g")
+      .attr("transform", `translate(0,${innerH})`)
+      .call(d3.axisBottom(xScale)
+        .ticks(d3.timeDay.every(7))
+        .tickFormat(d3.timeFormat("%b %d")))
+      .call(a => a.select(".domain").attr("stroke", "#2e3a58"))
+      .call(a => a.selectAll("line").attr("stroke", "#2e3a58"))
+      .call(a => a.selectAll("text").attr("fill", "#8e99b4").attr("font-size", "11px").attr("font-family", "Arial, sans-serif"));
+
+    // Y axis — custom labels
+    const yLabels = [
+      { phase: 1, line1: "Phase 1", line2: "Preconditions", color: "#4a7fc1" },
+      { phase: 2, line1: "Phase 2", line2: "Emergence",     color: "#d4a017" },
+      { phase: 3, line1: "Phase 3", line2: "Consolidation", color: "#c0392b" }
+    ];
+    yLabels.forEach(l => {
+      const cy = yScale(l.phase) + yScale.bandwidth() / 2;
+      g.append("text")
+        .attr("x", -8)
+        .attr("y", cy - 6)
+        .attr("text-anchor", "end")
+        .attr("fill", l.color)
+        .attr("font-size", "11px")
+        .attr("font-family", "Arial, sans-serif")
+        .attr("font-weight", "700")
+        .text(l.line1);
+      g.append("text")
+        .attr("x", -8)
+        .attr("y", cy + 8)
+        .attr("text-anchor", "end")
+        .attr("fill", "#8e99b4")
+        .attr("font-size", "10px")
+        .attr("font-family", "Arial, sans-serif")
+        .text(l.line2);
+    });
+
+    // Jitter overlapping dots on same date+phase
+    const jitterMap = {};
+    events.forEach(e => {
+      const key = `${e.date}-${e.phase}`;
+      jitterMap[key] = (jitterMap[key] || 0) + 1;
+      e._slot = jitterMap[key] - 1;
+    });
+
+    // Dots
+    const tooltip = document.getElementById("tooltip");
+
+    g.selectAll("circle")
+      .data(events)
+      .join("circle")
+        .attr("cx", d => xScale(d.dateObj) + d._slot * 14)
+        .attr("cy", d => yScale(d.phase) + yScale.bandwidth() / 2)
+        .attr("r", 7)
+        .attr("fill", d => phaseColors[d.phase])
+        .attr("fill-opacity", 0.85)
+        .attr("stroke", d => phaseColors[d.phase])
+        .attr("stroke-width", 1.5)
+        .attr("stroke-opacity", 0.5)
+        .style("cursor", "pointer")
+        .on("mousemove", function(event, d) {
+          const color = phaseColors[d.phase];
+          tooltip.innerHTML = `
+            <div class="tt-title">${d.title}</div>
+            <div class="tt-date">${fmtDate(d.dateObj)}</div>
+            <span class="tt-theme" style="background:${color}22;color:${color};border:1px solid ${color}44">${d.theme}</span>
+            <div class="tt-summary">${d.summary}</div>
+            <div class="tt-source"><a href="${d.source}" target="_blank" style="color:#6b9fd4">Source ↗</a></div>
+          `;
+          tooltip.style.opacity = "1";
+          tooltip.style.left = (event.clientX + 16) + "px";
+          tooltip.style.top  = (event.clientY - 10) + "px";
+
+          d3.select(this).attr("r", 10).attr("fill-opacity", 1);
+        })
+        .on("mouseleave", function() {
+          tooltip.style.opacity = "0";
+          d3.select(this).attr("r", 7).attr("fill-opacity", 0.85);
+        });
+
+    // X axis label
+    svg.append("text")
+      .attr("class", "axis-label")
+      .attr("x", W / 2)
+      .attr("y", H - 8)
+      .attr("text-anchor", "middle")
+      .text("Date (April – May 2026)");
+  })();
+
+  // ── VERTICAL TIMELINE ────────────────────────────────────────────────────────
+  (function buildVTL() {
+    const sorted = [...events].sort((a, b) => a.dateObj - b.dateObj);
+    const container = document.getElementById("vtl-container");
+
+    sorted.forEach((e, i) => {
+      const side = i % 2 === 0 ? "left" : "right";
+      const phaseClass = `phase${e.phase}`;
+      const color = phaseColors[e.phase];
+
+      const el = document.createElement("div");
+      el.className = `vtl-event ${side} ${phaseClass}`;
+      el.innerHTML = `
+        <div class="vtl-connector"></div>
+        <div class="vtl-card" data-id="${e.id}">
+          <div class="vtl-card-head">
+            <div class="vtl-card-date">${fmtDate(e.dateObj).toUpperCase()} &nbsp;·&nbsp; ${phaseLabels[e.phase]}</div>
+            <div class="vtl-card-title">${e.title}</div>
+            <div class="vtl-card-toggle">▼ expand</div>
+          </div>
+          <div class="vtl-card-body">
+            <p class="vtl-card-summary">${e.summary}</p>
+            <div class="vtl-card-meta">
+              <span class="vtl-card-theme">${e.theme}</span>
+              <span class="vtl-card-source"><a href="${e.source}" target="_blank">Source ↗</a></span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Toggle expand on click
+      el.querySelector(".vtl-card").addEventListener("click", function() {
+        this.classList.toggle("open");
+      });
+
+      container.appendChild(el);
+    });
+  })();
+  </script>
+</body>
+</html>

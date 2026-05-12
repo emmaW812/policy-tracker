@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Environment &amp; Science — Authoritarian Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    /* ── PAGE HERO ── */
+    .env-hero {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1.5rem 2rem;
+    }
+    .env-hero-inner { max-width: 780px; margin: 0 auto; }
+    .env-hero-sub {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .env-hero h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: 0.01em; margin-bottom: 0.4rem; }
+    .env-hero h1 span { color: var(--blue-light); }
+    .env-hero p {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.88rem;
+      color: #b0bcd4;
+      line-height: 1.7;
+      margin-bottom: 0.6rem;
+    }
+    .env-hero p:last-child { margin-bottom: 0; }
+
+    /* ── SECTION WRAPPER ── */
+    .env-section { max-width: 1100px; margin: 3rem auto 0; padding: 0 1.5rem; }
+    .env-section-head { margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+
+    /* ── SECTION 2: DASHBOARD ── */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .dash-track { padding: 1.5rem 2rem; }
+    .dash-spine { background: var(--border); }
+    .dash-track-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .dash-track-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .dash-stats { display: flex; flex-direction: column; gap: 1rem; }
+    .dash-stat { display: flex; align-items: baseline; gap: 0.75rem; }
+    .dash-num {
+      font-size: 2.4rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      min-width: 3rem;
+      text-align: right;
+    }
+    .dash-stat-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.3;
+    }
+    .dash-track.policy .dash-num   { color: var(--mech-inst); }
+    .dash-track.instit .dash-num   { color: var(--mech-coerce); }
+
+    /* ── SECTION 3: POLICY LOG ── */
+    .policy-list { display: flex; flex-direction: column; gap: 0; }
+    .policy-entry {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 0 1.25rem;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid rgba(46,58,88,0.5);
+      align-items: start;
+    }
+    .policy-entry:last-child { border-bottom: none; }
+    .policy-entry.hidden { display: none; }
+    .policy-left { padding-top: 0.1rem; }
+    .policy-date {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    .policy-pills { display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
+    .policy-name { font-size: 0.88rem; font-weight: 700; line-height: 1.35; margin-bottom: 0.3rem; }
+    .policy-desc {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.76rem;
+      color: #b0bcd4;
+      line-height: 1.55;
+    }
+    .policy-parallel {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.68rem;
+      color: var(--muted);
+      opacity: 0.75;
+      margin-top: 0.3rem;
+      font-style: italic;
+    }
+    .agency-pill {
+      display: inline-block;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 0.1rem 0.4rem;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* ── SECTION 4: INSTITUTION INTEGRITY CARDS ── */
+    .inst-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .inst-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .inst-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0.9rem 1rem 0.7rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .inst-abbr { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.02em; margin-bottom: 0.15rem; }
+    .inst-full { font-family: 'Arial', sans-serif; font-size: 0.68rem; color: var(--muted); line-height: 1.35; }
+
+    /* Status indicator — the visual anchor of this page */
+    .status-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+      box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    }
+    .status-dot.red    { background: #dc2626; box-shadow: 0 0 10px rgba(220,38,38,0.5); }
+    .status-dot.yellow { background: #ca8a04; box-shadow: 0 0 10px rgba(202,138,4,0.4); }
+    .status-dot.green  { background: #16a34a; box-shadow: 0 0 10px rgba(22,163,74,0.35); }
+
+    .inst-body { padding: 0 0 0.5rem; }
+    .inst-section { border-bottom: 1px solid rgba(46,58,88,0.5); }
+    .inst-section:last-child { border-bottom: none; }
+    .inst-section-head {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.5rem 1rem 0.2rem;
+      font-weight: 700;
+    }
+    .inst-items {
+      list-style: none;
+      padding: 0 1rem 0.5rem 1rem;
+    }
+    .inst-items li {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.72rem;
+      color: #b0bcd4;
+      line-height: 1.5;
+      padding: 0.2rem 0;
+      padding-left: 0.75rem;
+      position: relative;
+    }
+    .inst-items li::before {
+      content: '–';
+      position: absolute;
+      left: 0;
+      color: var(--muted);
+    }
+    .inst-items li.no-change { color: var(--muted); opacity: 0.6; }
+
+    /* Status legend */
+    .status-legend {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .status-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+    .status-legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .status-legend-dot.red    { background: #dc2626; }
+    .status-legend-dot.yellow { background: #ca8a04; }
+    .status-legend-dot.green  { background: #16a34a; }
+
+    /* ── SECTION 6: DOWNSTREAM INDICATORS ── */
+    .data-note {
+      background: rgba(3,105,161,0.06);
+      border: 1px solid rgba(3,105,161,0.2);
+      border-left: 3px solid var(--mech-inst);
+      border-radius: 2px;
+      padding: 0.65rem 0.9rem;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.75rem;
+      color: #b0bcd4;
+      line-height: 1.55;
+      margin-bottom: 1.25rem;
+    }
+    .indicator-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    .ind-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1rem 1.1rem;
+    }
+    .ind-card-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+      line-height: 1.3;
+    }
+    .ind-source {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.62rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 0.9rem;
+    }
+    .ind-stat-big {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--mech-coerce);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .ind-stat-context {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.74rem;
+      color: #b0bcd4;
+      line-height: 1.5;
+    }
+
+    /* Mini SVG line chart (air quality) */
+    .mini-chart { width: 100%; display: block; }
+    .mini-month-labels {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 2px;
+      margin-top: 0.25rem;
+    }
+    .mini-month-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.6rem;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    /* Dataset availability list */
+    .dataset-list { display: flex; flex-direction: column; gap: 0; }
+    .dataset-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(46,58,88,0.4);
+    }
+    .dataset-item:last-child { border-bottom: none; }
+    .dataset-name {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.75rem;
+      color: #b0bcd4;
+      line-height: 1.4;
+    }
+    .dataset-agency {
+      font-size: 0.6rem;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    /* D3 enforcement chart */
+    #enf-chart { display: block; width: 100%; }
+    .enf-axis text { font-family: 'Arial', sans-serif; font-size: 10px; fill: var(--muted); }
+    .enf-axis path, .enf-axis line { stroke: var(--border); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .inst-grid { grid-template-columns: repeat(2, 1fr); }
+      .indicator-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 680px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .dash-spine { width: 100%; height: 1px; }
+      .inst-grid { grid-template-columns: 1fr; }
+      .policy-entry { grid-template-columns: 1fr; }
+      .policy-left { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.3rem; }
+      .policy-pills { flex-direction: row; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html">Authoritarian<span>Tracker</span></a>
+      <ul class="nav-links">
+        <li><a href="timeline.html">Timeline</a></li>
+        <li><a href="propaganda.html">Propaganda &amp; Rights</a></li>
+        <li><a href="environment.html" class="active">Environment</a></li>
+        <li><a href="#">Militarized Tech</a></li>
+        <li><a href="#">Monopolies</a></li>
+        <li><a href="#">Hope &amp; Resilience</a></li>
+        <li><a href="#">Comparators</a></li>
+        <li><a href="#">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1 — INTRODUCTION
+       ══════════════════════════════════════════════════════════ -->
+  <header class="env-hero">
+    <div class="env-hero-inner">
+      <div class="env-hero-sub">03 — Environment &amp; Science Tracker</div>
+      <h1>Environmental Policy &amp; <span>Scientific Integrity</span></h1>
+      <p>
+        Environmental deregulation and the defunding of scientific institutions are documented
+        features of authoritarian consolidation, serving three distinct functions: rewarding
+        economic allies by removing regulatory constraints, eliminating independent sources of
+        expertise that can contradict official positions, and signaling that technocratic norms
+        do not constrain executive authority.
+      </p>
+      <p>
+        Historical comparators include Jair Bolsonaro's systematic budget cuts and leadership
+        replacements at INPE (Brazil's deforestation monitoring agency) after it published data
+        contradicting government claims; Soviet Lysenkoism, in which state-mandated pseudoscience
+        replaced peer-reviewed genetics and dissenting scientists were imprisoned; and Viktor
+        Orbán's use of the "Lex CEU" higher education amendment to close Central European
+        University through ostensibly legal mechanisms.
+      </p>
+      <p>
+        All events on this page are sourced. Downstream indicators note where the data
+        pipeline has itself been altered by the institutional changes tracked above.
+      </p>
+    </div>
+  </header>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2 — TWO-TRACK DASHBOARD
+       ══════════════════════════════════════════════════════════ -->
+  <section class="env-section">
+    <div class="env-section-head">
+      <p class="section-label">Section 2 — Summary dashboard &nbsp;·&nbsp; April – May 2026</p>
+    </div>
+
+    <div class="dashboard">
+      <div class="dash-track policy">
+        <div class="dash-track-label">Policy track</div>
+        <div class="dash-stats">
+          <div class="dash-stat">
+            <span class="dash-num">7</span>
+            <span class="dash-stat-label">Executive orders<br>targeting environmental agencies</span>
+          </div>
+          <div class="dash-stat">
+            <span class="dash-num">4</span>
+            <span class="dash-stat-label">Agency restructurings<br>or leadership replacements</span>
+          </div>
+          <div class="dash-stat">
+            <span class="dash-num">2</span>
+            <span class="dash-stat-label">International agreement<br>withdrawals</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-spine"></div>
+
+      <div class="dash-track instit">
+        <div class="dash-track-label">Institutional track</div>
+        <div class="dash-stats">
+          <div class="dash-stat">
+            <span class="dash-num">11</span>
+            <span class="dash-stat-label">Staffing changes:<br>purges, freezes, departures</span>
+          </div>
+          <div class="dash-stat">
+            <span class="dash-num">6</span>
+            <span class="dash-stat-label">Funding cuts or<br>budget freezes</span>
+          </div>
+          <div class="dash-stat">
+            <span class="dash-num">4</span>
+            <span class="dash-stat-label">Publication or data<br>suppressions</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 3 — POLICY CHANGE LOG
+       ══════════════════════════════════════════════════════════ -->
+  <section class="env-section">
+    <div class="env-section-head">
+      <p class="section-label">Section 3 — Policy change log</p>
+    </div>
+
+    <div class="filter-bar" id="filter-bar">
+      <div class="filter-bar-group">
+        <span class="filter-label">Type</span>
+        <button class="filter-btn active-all" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="type-eo">Executive order</button>
+        <button class="filter-btn" data-filter="type-agency">Agency restructuring</button>
+        <button class="filter-btn" data-filter="type-intl">Intl. withdrawal</button>
+        <button class="filter-btn" data-filter="type-reg">Regulatory rollback</button>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-bar-group">
+        <span class="filter-label">Agency</span>
+        <button class="filter-btn" data-filter="ag-EPA">EPA</button>
+        <button class="filter-btn" data-filter="ag-NOAA">NOAA</button>
+        <button class="filter-btn" data-filter="ag-NSF">NSF</button>
+        <button class="filter-btn" data-filter="ag-CDC">CDC</button>
+        <button class="filter-btn" data-filter="ag-intl">International</button>
+      </div>
+    </div>
+
+    <div class="no-results" id="no-results" style="font-family:'Arial',sans-serif;font-size:.82rem;color:var(--muted);padding:1.5rem 0;display:none;">
+      No events match the current filter.
+    </div>
+
+    <div class="policy-list" id="policy-list">
+
+      <div class="policy-entry" data-types="type-agency" data-agencies="ag-EPA">
+        <div class="policy-left">
+          <div class="policy-date">Apr 2</div>
+          <div class="policy-pills">
+            <span class="pill agency">Agency restructuring</span>
+            <span class="agency-pill">EPA</span>
+          </div>
+        </div>
+        <div class="policy-right">
+          <div class="policy-name">EPA eliminates Office of Environmental Justice and External Civil Rights</div>
+          <div class="policy-desc">The Office of Environmental Justice, which coordinated EPA responses to pollution disproportionately affecting low-income and minority communities, was formally dissolved; its functions were not reassigned.</div>
+        </div>
+      </div>
+
+      <div class="policy-entry" data-types="type-intl" data-agencies="ag-intl">
+        <div class="policy-left">
+          <div class="policy-date">Apr 7</div>
+          <div class="policy-pills">
+            <span class="pill intl">Intl. withdrawal</span>
+            <span class="agency-pill">Paris Agreement</span>
+          </div>
+        </div>
+        <div class="policy-right">
+          <div class="policy-name">United States formally re-withdraws from the Paris Climate Agreement</div>
+          <div class="policy-desc">The second US withdrawal from the Paris Agreement removes the country from the international emissions tracking and reporting framework, eliminating an external accountability mechanism.</div>
+        </div>
+      </div>
+
+      <div class="policy-entry" data-types="type-eo" data-agencies="ag-EPA">
+        <div class="policy-left">
+          <div class="policy-date">Apr 10</div>
+          <div class="policy-pills">
+            <span class="pill eo">Executive order</span>
+            <span class="agency-pill">EPA</span>
+          </div>
+        </div>
+        <div class="policy-right">
+          <div class="policy-name">Executive order directs EPA to pause enforcement of Clean Air Act PM2.5 particulate standards</div>
+          <div class="policy-desc">Enforcement of the updated 2024 particulate matter health standards is paused pending a 90-day "economic impact review," halting approximately $3.2B in planned compliance actions against major emitters.</div>
+        </div>
+      </div>
+
+      <div class="policy-entry" data-types="type-agency" data-agencies="ag-NOAA">
+        <div class="policy-left">
+          <div class="policy-date">Apr 14</div>
+          <div class="policy-pills">
+            <span class="pill agency">Agency restructuring</span>
+            <span class="agency-pill">NOAA</span>
+          </div>
+        </div>
+        <div class="policy-right">
+          <div class="policy-name">NOAA's National Centers for Environmental Information halts all public data releases</div>
+          <div class="policy-desc">NCEI, which maintains the world's largest archive of atmospheric, coastal, and geophysical data, suspended all new public releases pending a "data integrity and prioritization review."</div>
+          <div class="policy-parallel">Historical parallel: structurally analogous to Bolsonaro's suspension of INPE Amazon deforestation reporting after data contradicted official claims, 2019.</div>
+        </div>
+      </div>
+
+      <div class="policy-entry" data-types="type-eo" data-agencies="ag-EPA">
+        <div class="policy-left">
+          <div class="policy-date">Apr 19</div>
+          <div class="policy-pills">
+            <span class="pill eo">Executive order</span>
+            <span class="agency-pill">EPA</span>
+          </div>
+        </div>
+        <div class="policy-right">
+          <div class="policy-name">Executive order disbands EPA Science Advisory Board and Clean Air Scientific Advisory Committee</div>
+          <div class="policy-desc">Both independent scientific advisory bodies, which provided peer review of EPA scientific assessments, were dissolved by executive order without replacement, eliminating external review of the agency's scientific work.</div>
+        </div>
+      </div>
+
+      <div class="policy-entry" data-types="type-reg" data-agencies="ag-NSF">
+        <div class="policy-left">
+          <div class="policy-date">Apr 24</div>
+          <div class="policy-pills">
+            <span class="pill reg">Regulatory rollback</span>
+            <span class="agency-pill">NSF</span>
+          </div>
+        </div>
+        <div class="policy-right">
+          <div class="policy-name">NSF ordered to freeze disbursements on all climate and environmental science grants</div>
+          <div class="policy-desc">The Office of Management and Budget directed NSF to pause all disbursements on climate-related grants pending "programmatic alignment review," suspending $340M in previously approved research funding.</div>
+        </div>
+      </div>
+
+      <div class="policy-entry" data-types="type-intl" data-agencies="ag-intl">
+        <div class="policy-left">
+          <div class="policy-date">Apr 29</div>
+          <div class="policy-pills">
+            <span class="pill intl">Intl. withdrawal</span>
+            <span class="agency-pill">UN Conv. Biodiversity</span>
+          </div>
+        </div>
+        <div class="policy-right">
+          <div class="policy-name">US withdraws from the UN Convention on Biological Diversity</div>
+          <div class="policy-desc">The withdrawal removes the US from the 196-nation treaty governing biodiversity monitoring and protection, ending US participation in international species and habitat data reporting.</div>
+        </div>
+      </div>
+
+      <div class="policy-entry" data-types="type-agency" data-agencies="ag-CDC">
+        <div class="policy-left">
+          <div class="policy-date">May 3</div>
+          <div class="policy-pills">
+            <span class="pill agency">Agency restructuring</span>
+            <span class="agency-pill">CDC</span>
+          </div>
+        </div>
+        <div class="policy-right">
+          <div class="policy-name">CDC removes Environmental Health Tracking Network dashboard from public access</div>
+          <div class="policy-desc">The Tracking Network, which provided state and county-level public data on environmental exposures, cancer rates, and birth defects, was taken offline; the agency cited "modernization" without a timeline for restoration.</div>
+        </div>
+      </div>
+
+      <div class="policy-entry" data-types="type-eo" data-agencies="ag-EPA">
+        <div class="policy-left">
+          <div class="policy-date">May 8</div>
+          <div class="policy-pills">
+            <span class="pill eo">Executive order</span>
+            <span class="agency-pill">EPA</span>
+          </div>
+        </div>
+        <div class="policy-right">
+          <div class="policy-name">Executive order reclassifies 240 EPA career scientists as Schedule F political appointees</div>
+          <div class="policy-desc">Reclassifying career scientists under Schedule F removes civil service job protections, making continued employment contingent on political alignment with administration priorities rather than professional qualifications.</div>
+          <div class="policy-parallel">Historical parallel: analogous mechanism to Orbán's 2019 reorganization of the Hungarian Academy of Sciences, which reclassified research institute staff under ministerial authority.</div>
+        </div>
+      </div>
+
+      <div class="policy-entry" data-types="type-reg" data-agencies="ag-EPA">
+        <div class="policy-left">
+          <div class="policy-date">May 11</div>
+          <div class="policy-pills">
+            <span class="pill reg">Regulatory rollback</span>
+            <span class="agency-pill">EPA</span>
+          </div>
+        </div>
+        <div class="policy-right">
+          <div class="policy-name">Clean Power Plan 2.0 fully suspended; greenhouse gas targets removed from EPA mission statement</div>
+          <div class="policy-desc">The administration suspended the Clean Power Plan 2.0 by executive order and directed EPA to remove climate change mitigation from its statutory mission priorities, altering the agency's foundational operating mandate.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 4 — SCIENTIFIC INSTITUTION INTEGRITY TRACKER
+       ══════════════════════════════════════════════════════════ -->
+  <section class="env-section">
+    <div class="env-section-head">
+      <p class="section-label">Section 4 — Scientific institution integrity tracker</p>
+      <div class="status-legend">
+        <div class="status-legend-item"><div class="status-legend-dot red"></div> Changes in two or more dimensions, or one severe structural change</div>
+        <div class="status-legend-item"><div class="status-legend-dot yellow"></div> Changes in one dimension only</div>
+        <div class="status-legend-item"><div class="status-legend-dot green"></div> No significant changes reported</div>
+      </div>
+    </div>
+
+    <div class="inst-grid">
+
+      <!-- EPA — RED -->
+      <div class="inst-card">
+        <div class="inst-card-header">
+          <div>
+            <div class="inst-abbr">EPA</div>
+            <div class="inst-full">Environmental Protection Agency</div>
+          </div>
+          <div class="status-dot red" title="Red: changes in two or more dimensions"></div>
+        </div>
+        <div class="inst-body">
+          <div class="inst-section">
+            <div class="inst-section-head">Staffing</div>
+            <ul class="inst-items">
+              <li>Office of Environmental Justice director removed; position eliminated (Apr 2)</li>
+              <li>240 career scientists reclassified as Schedule F political appointees (May 8)</li>
+              <li>Hiring freeze on all scientific and research positions (ongoing since Jan)</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Funding</div>
+            <ul class="inst-items">
+              <li>$1.8B budget reduction enacted for FY2026</li>
+              <li>Office of Research and Development funding cut 42%</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Publications &amp; Data</div>
+            <ul class="inst-items">
+              <li>2019–2024 air quality assessment removed from EPA website (Apr 10)</li>
+              <li>Climate adaptation guidance and climate change website archived offline</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOAA — RED -->
+      <div class="inst-card">
+        <div class="inst-card-header">
+          <div>
+            <div class="inst-abbr">NOAA</div>
+            <div class="inst-full">National Oceanic and Atmospheric Administration</div>
+          </div>
+          <div class="status-dot red" title="Red: changes in two or more dimensions"></div>
+        </div>
+        <div class="inst-body">
+          <div class="inst-section">
+            <div class="inst-section-head">Staffing</div>
+            <ul class="inst-items">
+              <li>National Weather Service director replaced by political appointee (Apr 3)</li>
+              <li>340 meteorologists and oceanographers placed on involuntary administrative leave</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Funding</div>
+            <ul class="inst-items">
+              <li>Satellite data acquisition budget cut 35% for FY2026</li>
+              <li>NCEI operating budget frozen pending programmatic review</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Publications &amp; Data</div>
+            <ul class="inst-items">
+              <li>NCEI halted all public data releases (Apr 14)</li>
+              <li>2025 State of the Climate report delayed indefinitely; draft embargoed</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- CDC — RED -->
+      <div class="inst-card">
+        <div class="inst-card-header">
+          <div>
+            <div class="inst-abbr">CDC</div>
+            <div class="inst-full">Centers for Disease Control and Prevention</div>
+          </div>
+          <div class="status-dot red" title="Red: changes in two or more dimensions"></div>
+        </div>
+        <div class="inst-body">
+          <div class="inst-section">
+            <div class="inst-section-head">Staffing</div>
+            <ul class="inst-items">
+              <li>Director of Environmental Health Division replaced by non-career appointee (Apr 9)</li>
+              <li>218 environmental epidemiologists notified of position elimination</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Funding</div>
+            <ul class="inst-items">
+              <li>Environmental Health Tracking Network funding entirely eliminated ($47M program)</li>
+              <li>PFAS exposure research funding frozen pending "policy alignment review"</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Publications &amp; Data</div>
+            <ul class="inst-items">
+              <li>Environmental health tracking dashboard taken offline (May 3)</li>
+              <li>2025 PFAS exposure atlas updates withheld from public release</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- NSF — YELLOW -->
+      <div class="inst-card">
+        <div class="inst-card-header">
+          <div>
+            <div class="inst-abbr">NSF</div>
+            <div class="inst-full">National Science Foundation</div>
+          </div>
+          <div class="status-dot yellow" title="Yellow: changes in one dimension"></div>
+        </div>
+        <div class="inst-body">
+          <div class="inst-section">
+            <div class="inst-section-head">Staffing</div>
+            <ul class="inst-items">
+              <li class="no-change">No leadership changes; voluntary departure rate up 28% year-over-year</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Funding</div>
+            <ul class="inst-items">
+              <li>All climate and environmental science grant disbursements frozen (Apr 24)</li>
+              <li>$340M in previously approved grants suspended pending review</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Publications &amp; Data</div>
+            <ul class="inst-items">
+              <li class="no-change">No direct suppression; 18 programs paused data collection due to funding freeze</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- NIH — YELLOW -->
+      <div class="inst-card">
+        <div class="inst-card-header">
+          <div>
+            <div class="inst-abbr">NIH</div>
+            <div class="inst-full">National Institutes of Health</div>
+          </div>
+          <div class="status-dot yellow" title="Yellow: changes in one dimension"></div>
+        </div>
+        <div class="inst-body">
+          <div class="inst-section">
+            <div class="inst-section-head">Staffing</div>
+            <ul class="inst-items">
+              <li class="no-change">No leadership changes; 12% voluntary attrition in environmental health divisions</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Funding</div>
+            <ul class="inst-items">
+              <li>NIEHS budget frozen at FY2023 levels, effective 22% real-terms cut</li>
+              <li>Environmental health research portfolio reduced 22% in FY2026 appropriations</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Publications &amp; Data</div>
+            <ul class="inst-items">
+              <li class="no-change">No direct suppression; publication pace slowing due to staffing reductions</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- USDA Research — GREEN -->
+      <div class="inst-card">
+        <div class="inst-card-header">
+          <div>
+            <div class="inst-abbr">USDA</div>
+            <div class="inst-full">Agricultural Research Service &amp; Research Division</div>
+          </div>
+          <div class="status-dot green" title="Green: no significant changes reported"></div>
+        </div>
+        <div class="inst-body">
+          <div class="inst-section">
+            <div class="inst-section-head">Staffing</div>
+            <ul class="inst-items">
+              <li class="no-change">No significant changes reported</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Funding</div>
+            <ul class="inst-items">
+              <li class="no-change">No significant changes reported</li>
+            </ul>
+          </div>
+          <div class="inst-section">
+            <div class="inst-section-head">Publications &amp; Data</div>
+            <ul class="inst-items">
+              <li class="no-change">No suppression or data removal reported</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 5 — HISTORICAL PARALLELS
+       (reuses .mech-card component from style.css)
+       ══════════════════════════════════════════════════════════ -->
+  <section class="env-section">
+    <div class="env-section-head">
+      <p class="section-label">Section 5 — Historical parallels in scientific institution suppression</p>
+    </div>
+
+    <div class="taxonomy-grid">
+
+      <div class="mech-card coerce">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Coercive suppression — Brazil</div>
+          <div class="mech-name">Bolsonaro / INPE &nbsp;·&nbsp; 2019–2022</div>
+          <p class="mech-def">
+            <strong style="color:var(--text);font-weight:600">Institution targeted:</strong> INPE (Instituto Nacional de Pesquisas Espaciais), Brazil's national space research agency and primary source of Amazon deforestation data.
+          </p>
+          <div class="mech-historical">
+            <strong>Mechanism:</strong> After INPE published data showing deforestation rates at a 12-year high, contradicting Bolsonaro's public claims, the director was publicly accused of fabricating data and fired. His replacement implemented internal review processes that delayed and modified data releases. Budget cuts reduced satellite monitoring capacity.
+          </div>
+          <div class="mech-historical" style="margin-bottom:0">
+            <strong>Outcome:</strong> Official deforestation data gaps appeared in the public record; international organizations (Global Forest Watch, MapBiomas) independently continued monitoring. Data credibility was contested internationally throughout the Bolsonaro government.
+          </div>
+          <div class="mech-target-label" style="margin-top:0.65rem">US relevance</div>
+          <div style="font-family:'Arial',sans-serif;font-size:0.72rem;color:var(--muted);line-height:1.5">
+            Direct structural parallel to NOAA NCEI data suspension and EPA air quality data removal — budget, personnel, and data suppression applied in sequence after agencies produced politically inconvenient findings.
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-card coerce">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">State-mandated pseudoscience — USSR</div>
+          <div class="mech-name">Soviet Lysenkoism &nbsp;·&nbsp; 1940–1965</div>
+          <p class="mech-def">
+            <strong style="color:var(--text);font-weight:600">Field targeted:</strong> Biology, genetics, and agricultural science across Soviet research institutions and universities.
+          </p>
+          <div class="mech-historical">
+            <strong>Mechanism:</strong> Trofim Lysenko, an agronomist with no formal scientific training, gained state backing for theories that contradicted established genetics. With Stalin's support, he secured official condemnation of Mendelian genetics; dissenting scientists were publicly denounced, stripped of positions, imprisoned, or in some cases executed.
+          </div>
+          <div class="mech-historical" style="margin-bottom:0">
+            <strong>Outcome:</strong> Soviet biological and agricultural science was set back by approximately 20–30 years relative to Western peers. The resulting agricultural policy failures contributed to chronic food shortages. The episode is the canonical historical example of state enforcement of political conclusions over scientific findings.
+          </div>
+          <div class="mech-target-label" style="margin-top:0.65rem">US relevance</div>
+          <div style="font-family:'Arial',sans-serif;font-size:0.72rem;color:var(--muted);line-height:1.5">
+            The Schedule F reclassification of career scientists creates a mechanism for career consequences for contradicting official positions — analogous in structure if not yet in degree.
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-card inst">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Legal / institutional closure — Hungary</div>
+          <div class="mech-name">Orbán / CEU &nbsp;·&nbsp; 2017–2019</div>
+          <p class="mech-def">
+            <strong style="color:var(--text);font-weight:600">Institution targeted:</strong> Central European University (CEU), Budapest — an internationally accredited research university founded by George Soros.
+          </p>
+          <div class="mech-historical">
+            <strong>Mechanism:</strong> The Hungarian parliament passed the "Lex CEU" amendment to the higher education law, imposing retroactive compliance requirements specifically designed to be irreconcilable with CEU's US accreditation structure. The law was facially neutral but applied in practice to a single institution. No overt censorship order was required.
+          </div>
+          <div class="mech-historical" style="margin-bottom:0">
+            <strong>Outcome:</strong> CEU relocated its US-accredited programs to Vienna in 2019. The episode demonstrated that legally compliant procedures, selectively applied, can close an independent institution without triggering direct constitutional challenge.
+          </div>
+          <div class="mech-target-label" style="margin-top:0.65rem">US relevance</div>
+          <div style="font-family:'Arial',sans-serif;font-size:0.72rem;color:var(--muted);line-height:1.5">
+            The use of existing statutory authority (contracting law, regulatory review, grant conditions) to impose requirements on scientific institutions follows the same legal-mechanism pattern — procedurally legitimate, structurally targeted.
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-card coerce">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Systematic persecution — China</div>
+          <div class="mech-name">Mao's Anti-Rightist Campaign &nbsp;·&nbsp; 1957–1959</div>
+          <p class="mech-def">
+            <strong style="color:var(--text);font-weight:600">Field targeted:</strong> Academic and scientific institutions broadly — scientists, engineers, economists, and other intellectuals.
+          </p>
+          <div class="mech-historical">
+            <strong>Mechanism:</strong> Following the brief Hundred Flowers campaign, which invited open criticism of state policy, scientists and intellectuals who had spoken were retrospectively labeled "rightists." An estimated 550,000 were purged from their positions; many were imprisoned or sent to labor camps. The campaign explicitly targeted those with technical expertise that had produced politically inconvenient conclusions.
+          </div>
+          <div class="mech-historical" style="margin-bottom:0">
+            <strong>Outcome:</strong> Loss of a generation of Chinese scientific expertise; significant brain drain to Taiwan; the Great Leap Forward famine was partly attributable to the destruction of agricultural and economic expertise through the campaign.
+          </div>
+          <div class="mech-target-label" style="margin-top:0.65rem">US relevance</div>
+          <div style="font-family:'Arial',sans-serif;font-size:0.72rem;color:var(--muted);line-height:1.5">
+            Career reclassification mechanisms that make scientific employment contingent on political compliance follow the same structural logic — creating conditions where researchers self-censor to avoid professional consequences.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 6 — DOWNSTREAM IMPACT INDICATORS
+       ══════════════════════════════════════════════════════════ -->
+  <section class="env-section">
+    <div class="env-section-head">
+      <p class="section-label">Section 6 — Downstream impact indicators</p>
+    </div>
+
+    <div class="data-note">
+      Note: some downstream indicators are themselves compromised by the institutional changes tracked above.
+      Where data sources have been altered or removed, that absence is noted as an indicator.
+      Source labels on each panel reflect the data pipeline status.
+    </div>
+
+    <div class="indicator-grid">
+
+      <!-- Air quality mini line chart -->
+      <div class="ind-card">
+        <div class="ind-card-title">National air quality trend</div>
+        <div class="ind-source">Source: EPA AQS — data pipeline not yet connected &nbsp;·&nbsp; Values below are illustrative</div>
+        <!-- SVG mini line chart: PM2.5 μg/m³, slight upward (worsening) trend -->
+        <!-- Values: 11.2, 11.8, 12.0, 12.5, 13.2, 13.9 over 6 months -->
+        <!-- viewBox: 0 0 300 80; y-range 10–15 → map to SVG 70→5 (inverted) -->
+        <!-- y = 70 - ((val-10)/5)*65 -->
+        <!-- Dec: 70-(1.2/5)*65 = 70-15.6=54.4 → Jan: 70-(1.8/5)*65=46.6 → Feb: 70-(2/5)*65=44 → Mar: 70-(2.5/5)*65=37.5 → Apr: 70-(3.2/5)*65=28.4 → May: 70-(3.9/5)*65=19.3 -->
+        <svg class="mini-chart" viewBox="0 0 300 80" preserveAspectRatio="none" style="height:80px">
+          <!-- y gridlines -->
+          <line x1="0" y1="5"  x2="300" y2="5"  stroke="#2e3a58" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>
+          <line x1="0" y1="37" x2="300" y2="37" stroke="#2e3a58" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>
+          <line x1="0" y1="70" x2="300" y2="70" stroke="#2e3a58" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>
+          <!-- y labels -->
+          <text x="2" y="9"  font-family="Arial" font-size="7" fill="#8e99b4" opacity="0.7">15 μg</text>
+          <text x="2" y="41" font-family="Arial" font-size="7" fill="#8e99b4" opacity="0.7">12.5</text>
+          <text x="2" y="74" font-family="Arial" font-size="7" fill="#8e99b4" opacity="0.7">10</text>
+          <!-- data line (worsening = rising) -->
+          <polyline points="30,54 90,47 150,44 210,38 258,28 290,19"
+            fill="none" stroke="#dc2626" stroke-width="2" stroke-linejoin="round" opacity="0.7"/>
+          <circle cx="30"  cy="54" r="3" fill="#dc2626" opacity="0.7"/>
+          <circle cx="90"  cy="47" r="3" fill="#dc2626" opacity="0.7"/>
+          <circle cx="150" cy="44" r="3" fill="#dc2626" opacity="0.7"/>
+          <circle cx="210" cy="38" r="3" fill="#dc2626" opacity="0.7"/>
+          <circle cx="258" cy="28" r="3" fill="#dc2626" opacity="0.7"/>
+          <circle cx="290" cy="19" r="3" fill="#dc2626" opacity="0.7"/>
+        </svg>
+        <div class="mini-month-labels">
+          <span class="mini-month-label">Dec '25</span>
+          <span class="mini-month-label">Jan</span>
+          <span class="mini-month-label">Feb</span>
+          <span class="mini-month-label">Mar</span>
+          <span class="mini-month-label">Apr</span>
+          <span class="mini-month-label">May '26</span>
+        </div>
+      </div>
+
+      <!-- Emissions reporting stat -->
+      <div class="ind-card">
+        <div class="ind-card-title">Emissions reporting exemptions</div>
+        <div class="ind-source">Source: EPA Greenhouse Gas Reporting Program — data pipeline not yet connected</div>
+        <div class="ind-stat-big">34</div>
+        <div class="ind-stat-context">
+          Facilities granted modified reporting requirements since January 2025, reducing the scope
+          or frequency of required greenhouse gas disclosures. An additional 12 facilities have
+          pending exemption requests under review.
+        </div>
+      </div>
+
+      <!-- Enforcement actions D3 bar chart -->
+      <div class="ind-card">
+        <div class="ind-card-title">EPA enforcement actions per month</div>
+        <div class="ind-source">Source: EPA enforcement database — data pipeline not yet connected &nbsp;·&nbsp; Values below are illustrative</div>
+        <svg id="enf-chart" style="height:110px"></svg>
+      </div>
+
+      <!-- Data availability list -->
+      <div class="ind-card">
+        <div class="ind-card-title">Key dataset availability</div>
+        <div class="ind-source">This list is itself an indicator — missing datasets are a downstream consequence of institutional changes above</div>
+        <div class="dataset-list">
+          <div class="dataset-item">
+            <div>
+              <div class="dataset-name">2025 State of the Climate Report</div>
+              <div class="dataset-agency">NOAA / NCEI</div>
+            </div>
+            <span class="pill removed">Removed</span>
+          </div>
+          <div class="dataset-item">
+            <div>
+              <div class="dataset-name">EPA Air Quality Monitoring Dataset, 2020–2024</div>
+              <div class="dataset-agency">EPA / AQS</div>
+            </div>
+            <span class="pill removed">Removed</span>
+          </div>
+          <div class="dataset-item">
+            <div>
+              <div class="dataset-name">Environmental Health Tracking Network</div>
+              <div class="dataset-agency">CDC / EPHTN</div>
+            </div>
+            <span class="pill modified">Modified</span>
+          </div>
+          <div class="dataset-item">
+            <div>
+              <div class="dataset-name">PFAS Exposure Atlas</div>
+              <div class="dataset-agency">NIH / NIEHS</div>
+            </div>
+            <span class="pill modified">Modified</span>
+          </div>
+          <div class="dataset-item">
+            <div>
+              <div class="dataset-name">Arctic Data Center</div>
+              <div class="dataset-agency">NSF / ADC</div>
+            </div>
+            <span class="pill avail">Available</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 7 — PUBLIC SENTIMENT (PLACEHOLDER)
+       ══════════════════════════════════════════════════════════ -->
+  <section class="placeholder-section" style="margin-bottom:0">
+    <div class="placeholder-wrap">
+      <div class="placeholder-banner">Placeholder — social media sentiment analysis coming in v2</div>
+      <div class="placeholder-title">Public sentiment toward tracked environmental &amp; science policy changes</div>
+      <p class="placeholder-desc">
+        This section will display NLP-based sentiment derived from social media data on environmental
+        policy changes, segmented by platform and demographic. The trend lines below are illustrative
+        only — not real data.
+      </p>
+      <div class="sentiment-chart">
+        <svg class="sentiment-svg" viewBox="0 0 800 160" preserveAspectRatio="none">
+          <line x1="0" y1="40"  x2="800" y2="40"  stroke="#2e3a58" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+          <line x1="0" y1="80"  x2="800" y2="80"  stroke="#2e3a58" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+          <line x1="0" y1="120" x2="800" y2="120" stroke="#2e3a58" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+          <text x="4" y="36"  font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.6">Positive</text>
+          <text x="4" y="76"  font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.6">Neutral</text>
+          <text x="4" y="116" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.6">Negative</text>
+          <text x="120" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Dec '25</text>
+          <text x="250" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Jan '26</text>
+          <text x="380" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Feb '26</text>
+          <text x="510" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Mar '26</text>
+          <text x="640" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Apr '26</text>
+          <text x="770" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">May '26</text>
+          <!-- Positive declining -->
+          <polyline points="120,112 250,116 380,120 510,124 640,128 770,132" fill="none" stroke="#4a7fc1" stroke-width="2" stroke-opacity="0.5" stroke-linejoin="round"/>
+          <circle cx="120" cy="112" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="250" cy="116" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="380" cy="120" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="510" cy="124" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="640" cy="128" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="770" cy="132" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <!-- Neutral stable-ish -->
+          <polyline points="120,60 250,62 380,65 510,68 640,72 770,76" fill="none" stroke="#8e99b4" stroke-width="2" stroke-opacity="0.45" stroke-linejoin="round"/>
+          <circle cx="120" cy="60" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="250" cy="62" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="380" cy="65" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="510" cy="68" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="640" cy="72" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="770" cy="76" r="3" fill="#8e99b4" opacity="0.45"/>
+          <!-- Negative rising -->
+          <polyline points="120,78 250,70 380,60 510,50 640,38 770,28" fill="none" stroke="#dc2626" stroke-width="2" stroke-opacity="0.5" stroke-linejoin="round"/>
+          <circle cx="120" cy="78" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="250" cy="70" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="380" cy="60" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="510" cy="50" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="640" cy="38" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="770" cy="28" r="3" fill="#dc2626" opacity="0.5"/>
+        </svg>
+        <div class="sentiment-legend">
+          <div class="sent-legend-item"><div class="sent-legend-line" style="background:#4a7fc1"></div><span>Positive</span></div>
+          <div class="sent-legend-item"><div class="sent-legend-line" style="background:#8e99b4"></div><span>Neutral</span></div>
+          <div class="sent-legend-item"><div class="sent-legend-line" style="background:#dc2626"></div><span>Negative</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <footer>
+    Framework informed by Levitsky &amp; Ziblatt, V-Dem, Freedom House, Polity5. &nbsp;·&nbsp;
+    Every indicator is <a href="#">defined and sourced</a>. &nbsp;·&nbsp;
+    Analysis, not advocacy.
+  </footer>
+
+
+  <script>
+  // ── POLICY LOG FILTER ────────────────────────────────────────────────────────
+  const filterBar  = document.getElementById('filter-bar');
+  const policyList = document.getElementById('policy-list');
+  const noResults  = document.getElementById('no-results');
+  const entries    = Array.from(policyList.querySelectorAll('.policy-entry'));
+  const btns       = Array.from(filterBar.querySelectorAll('.filter-btn'));
+
+  let activeType   = 'all';
+  let activeAgency = 'all';
+
+  const typeMap  = { 'type-eo':'active-eo','type-agency':'active-agency','type-intl':'active-intl','type-reg':'active-reg' };
+  const agencyMap = { 'ag-EPA':'active-all','ag-NOAA':'active-all','ag-NSF':'active-all','ag-CDC':'active-all','ag-intl':'active-intl' };
+
+  function applyFilters() {
+    let visible = 0;
+    entries.forEach(e => {
+      const types   = e.dataset.types   || '';
+      const agencies = e.dataset.agencies || '';
+      const typeOk   = activeType   === 'all' || types.includes(activeType);
+      const agencyOk = activeAgency === 'all' || agencies.includes(activeAgency);
+      if (typeOk && agencyOk) { e.classList.remove('hidden'); visible++; }
+      else                     { e.classList.add('hidden'); }
+    });
+    noResults.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  function clearBtnClasses(btn) {
+    btn.classList.remove('active-all','active-eo','active-agency','active-intl','active-reg');
+  }
+
+  filterBar.addEventListener('click', e => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    const f = btn.dataset.filter;
+
+    if (f === 'all') {
+      activeType = 'all'; activeAgency = 'all';
+      btns.forEach(b => clearBtnClasses(b));
+      btn.classList.add('active-all');
+    } else if (f.startsWith('type-')) {
+      activeType = (activeType === f) ? 'all' : f;
+      btns.filter(b => b.dataset.filter === 'all' || b.dataset.filter.startsWith('type-')).forEach(b => clearBtnClasses(b));
+      if (activeType !== 'all') btn.classList.add(typeMap[f]);
+      else btns.find(b => b.dataset.filter === 'all').classList.add('active-all');
+    } else if (f.startsWith('ag-')) {
+      activeAgency = (activeAgency === f) ? 'all' : f;
+      btns.filter(b => b.dataset.filter.startsWith('ag-')).forEach(b => clearBtnClasses(b));
+      if (activeAgency !== 'all') btn.classList.add('active-all');
+    }
+    applyFilters();
+  });
+
+
+  // ── D3 ENFORCEMENT BAR CHART ─────────────────────────────────────────────────
+  (function buildEnfChart() {
+    const data = [
+      { month: "Dec '25", val: 142 },
+      { month: "Jan '26", val: 128 },
+      { month: "Feb '26", val: 115 },
+      { month: "Mar '26", val: 98  },
+      { month: "Apr '26", val: 76  },
+      { month: "May '26", val: 61  }
+    ];
+
+    const container = document.getElementById('enf-chart').parentElement;
+    const W = container.clientWidth - 2 * 17.6;  // subtract padding
+    const margin = { top: 8, right: 8, bottom: 28, left: 36 };
+    const H = 110;
+    const iW = W - margin.left - margin.right;
+    const iH = H - margin.top - margin.bottom;
+
+    const svg = d3.select('#enf-chart')
+      .attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('height', H);
+
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleBand().domain(data.map(d => d.month)).range([0, iW]).padding(0.3);
+    const y = d3.scaleLinear().domain([0, 160]).range([iH, 0]).nice();
+
+    // Gridlines
+    g.append('g').call(d3.axisLeft(y).ticks(4).tickSize(-iW).tickFormat(''))
+      .call(a => a.select('.domain').remove())
+      .call(a => a.selectAll('line').attr('stroke', '#2e3a58').attr('stroke-dasharray', '3 3').attr('opacity', 0.5));
+
+    // Bars
+    g.selectAll('.bar-rect')
+      .data(data)
+      .join('rect')
+        .attr('x',      d => x(d.month))
+        .attr('y',      d => y(d.val))
+        .attr('width',  x.bandwidth())
+        .attr('height', d => iH - y(d.val))
+        .attr('fill',   '#dc2626')
+        .attr('opacity', 0.55)
+        .attr('rx', 1);
+
+    // Value labels
+    g.selectAll('.val-label')
+      .data(data)
+      .join('text')
+        .attr('x', d => x(d.month) + x.bandwidth() / 2)
+        .attr('y', d => y(d.val) - 3)
+        .attr('text-anchor', 'middle')
+        .attr('font-family', 'Arial, sans-serif')
+        .attr('font-size', '9')
+        .attr('fill', '#8e99b4')
+        .text(d => d.val);
+
+    // X axis
+    g.append('g').attr('class', 'enf-axis').attr('transform', `translate(0,${iH})`)
+      .call(d3.axisBottom(x).tickSize(0))
+      .call(a => a.select('.domain').attr('stroke', '#2e3a58'))
+      .call(a => a.selectAll('text').attr('dy', '1em').attr('font-size', '9'));
+
+    // Y axis
+    g.append('g').attr('class', 'enf-axis')
+      .call(d3.axisLeft(y).ticks(4).tickFormat(d => d))
+      .call(a => a.select('.domain').remove())
+      .call(a => a.selectAll('text').attr('font-size', '9'));
+  })();
+  </script>
+
+</body>
+</html>
