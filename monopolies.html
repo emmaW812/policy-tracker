@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monopolies &amp; Consolidation — Authoritarian Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    /* ── PAGE HERO ── */
+    .mn-hero {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1.5rem 2rem;
+    }
+    .mn-hero-inner { max-width: 780px; margin: 0 auto; }
+    .mn-hero-sub {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .mn-hero h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: 0.01em; margin-bottom: 0.4rem; }
+    .mn-hero h1 span { color: var(--blue-light); }
+    .mn-hero p {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.88rem;
+      color: #b0bcd4;
+      line-height: 1.7;
+      margin-bottom: 0.6rem;
+    }
+    .mn-hero p:last-child { margin-bottom: 0; }
+
+    /* ── SECTION WRAPPER ── */
+    .mn-section { max-width: 1100px; margin: 3rem auto 0; padding: 0 1.5rem; }
+    .mn-section-head { margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+
+    /* ── SECTOR TABS ── */
+    .sector-tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .sector-tab {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.85rem;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .sector-tab:hover { border-color: var(--blue); color: var(--blue-light); }
+    .sector-tab.active { border-color: var(--blue); color: var(--blue-light); background: rgba(74,127,193,0.12); }
+
+    /* ── PIE CHART GRID ── */
+    .pie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .pie-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1rem;
+      transition: border-color 0.15s;
+    }
+    .pie-card:hover { border-color: var(--blue); }
+    .pie-card-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+    .pie-card-sub {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .pie-svg-wrap { position: relative; }
+    svg.pie-svg { display: block; margin: 0 auto; overflow: visible; }
+    .pie-legend { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.3rem; }
+    .pie-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.68rem;
+      color: #b0bcd4;
+    }
+    .pie-legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .pie-legend-pct { color: var(--muted); font-size: 0.62rem; margin-left: auto; }
+
+    /* Tooltip */
+    #mn-tooltip {
+      position: fixed;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      background: var(--navy);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.6rem 0.85rem;
+      max-width: 240px;
+      z-index: 200;
+      font-family: 'Arial', sans-serif;
+    }
+    #mn-tooltip .tt-corp  { font-size: 0.78rem; font-weight: 700; color: var(--text); margin-bottom: 0.2rem; }
+    #mn-tooltip .tt-pct   { font-size: 0.68rem; color: var(--muted); margin-bottom: 0.4rem; }
+    #mn-tooltip .tt-facts { font-size: 0.72rem; color: #b0bcd4; line-height: 1.5; }
+
+    /* ── RATE OF CHANGE CHART ── */
+    .roc-chart-wrap {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1.25rem 1rem 0.75rem;
+      overflow-x: auto;
+    }
+    #roc-chart { display: block; width: 100%; }
+    .roc-legend { display: flex; gap: 1.25rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .roc-legend-item { display: flex; align-items: center; gap: 0.4rem; font-family: 'Arial', sans-serif; font-size: 0.7rem; color: var(--muted); }
+    .roc-legend-line { width: 20px; height: 2px; border-radius: 1px; }
+
+    /* ── CONSEQUENCE GRID ── */
+    .consequence-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    .consequence-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1rem 1.1rem;
+    }
+    .consequence-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.15rem;
+    }
+    .consequence-sub {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.65rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 0.85rem;
+    }
+    .consequence-stat {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .consequence-desc {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.74rem;
+      color: #b0bcd4;
+      line-height: 1.55;
+    }
+    .consequence-card.health .consequence-stat  { color: var(--mech-coerce); }
+    .consequence-card.climate .consequence-stat { color: #0369a1; }
+    .consequence-card.labor .consequence-stat   { color: var(--grp-press); }
+    .consequence-card.price .consequence-stat   { color: var(--mech-prop); }
+
+    /* Regional case study strip */
+    .region-cases { display: flex; flex-direction: column; gap: 0; }
+    .region-case {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 0 1.25rem;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid rgba(46,58,88,0.5);
+      align-items: start;
+    }
+    .region-case:last-child { border-bottom: none; }
+    .region-case-left { padding-top: 0.1rem; }
+    .region-case-region {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+    .region-case-corp {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+    .region-case-name { font-size: 0.88rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.3rem; }
+    .region-case-desc { font-family: 'Arial', sans-serif; font-size: 0.76rem; color: #b0bcd4; line-height: 1.55; }
+
+    @media (max-width: 800px) {
+      .consequence-grid { grid-template-columns: 1fr; }
+      .region-case { grid-template-columns: 1fr; }
+      .region-case-left { display: flex; gap: 0.75rem; align-items: baseline; margin-bottom: 0.3rem; }
+    }
+    @media (max-width: 600px) {
+      .pie-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html">Authoritarian<span>Tracker</span></a>
+      <ul class="nav-links">
+        <li><a href="timeline.html">Timeline</a></li>
+        <li><a href="propaganda.html">Propaganda &amp; Rights</a></li>
+        <li><a href="environment.html">Environment</a></li>
+        <li><a href="miltech.html">Militarized Tech</a></li>
+        <li><a href="monopolies.html" class="active">Monopolies</a></li>
+        <li><a href="hope.html">Hope &amp; Resilience</a></li>
+        <li><a href="comparators.html">Comparators</a></li>
+        <li><a href="methodology.html">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1 — INTRODUCTION
+       ══════════════════════════════════════════════════════════ -->
+  <header class="mn-hero">
+    <div class="mn-hero-inner">
+      <div class="mn-hero-sub">05 — Monopolies &amp; Market Consolidation</div>
+      <h1>Corporate Concentration &amp; <span>Downstream Consequences</span></h1>
+      <p>
+        Market consolidation — the reduction of competitive markets to oligopolies or monopolies
+        controlled by a small number of corporations — has documented consequences for public health,
+        environmental outcomes, labor conditions, and price levels. In authoritarian consolidation
+        contexts, economic concentration and political consolidation are frequently mutually reinforcing:
+        oligarchic interests fund political movements; political power suppresses antitrust enforcement;
+        concentrated economic power controls media and information environments.
+      </p>
+      <p>
+        This page tracks ownership concentration across four sectors — healthcare, food, technology,
+        and fashion — with downstream consequence indicators. Pie chart data reflects market share
+        by revenue; hover a slice for corporation profile and ethical history. The rate-of-change
+        chart shows the shift from competitive markets to concentrated ownership over 25 years.
+      </p>
+    </div>
+  </header>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2 — PIE CHARTS: OWNERSHIP CONCENTRATION
+       ══════════════════════════════════════════════════════════ -->
+  <section class="mn-section">
+    <div class="mn-section-head">
+      <p class="section-label">Section 2 — Market ownership concentration by sector</p>
+      <div style="font-family:'Arial',sans-serif;font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">
+        Hover a slice for corporation profile. Data: most recent fiscal year by revenue market share.
+      </div>
+    </div>
+
+    <div class="sector-tabs" id="sector-tabs">
+      <button class="sector-tab active" data-sector="all">All sectors</button>
+      <button class="sector-tab" data-sector="healthcare">Healthcare</button>
+      <button class="sector-tab" data-sector="food">Food &amp; Beverage</button>
+      <button class="sector-tab" data-sector="tech">Technology</button>
+      <button class="sector-tab" data-sector="fashion">Fashion / Retail</button>
+    </div>
+
+    <div class="pie-grid" id="pie-grid">
+      <!-- Pie cards are rendered by JS below -->
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 3 — RATE OF CHANGE: SMALL BUSINESS → MONOPOLY
+       ══════════════════════════════════════════════════════════ -->
+  <section class="mn-section">
+    <div class="mn-section-head">
+      <p class="section-label">Section 3 — Rate of change: independent businesses vs. consolidated ownership</p>
+      <div style="font-family:'Arial',sans-serif;font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">
+        Indexed to 2000 = 100. Source: Census Bureau, SBA, industry trade data. Values illustrative of structural trend.
+      </div>
+    </div>
+
+    <div class="roc-chart-wrap">
+      <svg id="roc-chart" style="height:200px"></svg>
+      <div class="roc-legend">
+        <div class="roc-legend-item">
+          <div class="roc-legend-line" style="background:#4a7fc1"></div>
+          <span>Independent small businesses (index)</span>
+        </div>
+        <div class="roc-legend-item">
+          <div class="roc-legend-line" style="background:#dc2626"></div>
+          <span>Top-4 firm revenue share (index)</span>
+        </div>
+        <div class="roc-legend-item">
+          <div class="roc-legend-line" style="background:#d4a017; stroke-dasharray:4 4"></div>
+          <span>Antitrust enforcement actions (right axis)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 4 — REGIONAL CASE STUDIES (MAP PLACEHOLDER)
+       ══════════════════════════════════════════════════════════ -->
+  <section class="mn-section">
+    <div class="mn-section-head">
+      <p class="section-label">Section 4 — Regional corporate impact cases</p>
+    </div>
+
+    <div class="region-cases">
+
+      <div class="region-case">
+        <div class="region-case-left">
+          <div class="region-case-region">Latin America</div>
+          <div class="region-case-corp">The Coca-Cola Company</div>
+          <span class="pill inst">Food / Beverage</span>
+        </div>
+        <div>
+          <div class="region-case-name">Coca-Cola becomes cheaper than water in Chiapas, Mexico — contributing to nationwide obesity crisis</div>
+          <div class="region-case-desc">In San Cristóbal de las Casas and surrounding communities in Chiapas, a Coca-Cola bottling plant produces approximately 2 million liters daily for a population of 180,000 — a legacy of decades of brand entrenchment. Coca-Cola products retail below the price of purified water; the region has the highest per-capita soda consumption in Mexico. Mexico records 14.2% adult obesity linked to sugar-sweetened beverage consumption, with indigenous highland communities disproportionately affected by Type 2 diabetes at rates above 30% in some villages.</div>
+        </div>
+      </div>
+
+      <div class="region-case">
+        <div class="region-case-left">
+          <div class="region-case-region">United States — Rural</div>
+          <div class="region-case-corp">Tyson Foods / JBS</div>
+          <span class="pill coerce">Meat processing</span>
+        </div>
+        <div>
+          <div class="region-case-name">Four companies control 85% of US beef processing — eliminating competitive pricing for 800,000 cattle ranchers</div>
+          <div class="region-case-desc">Tyson Foods, JBS USA, Cargill, and National Beef collectively process 85% of federally inspected beef. This concentration has reduced the farm-to-retail price spread competition; cattle ranchers received 37% of the retail beef dollar in 1980 vs. 16% in 2024. Following COVID-19 plant closures in 2020 that controlled supply, the same four firms posted record profits while retail beef prices rose 20% and cattle prices fell — a margin extraction pattern documented in antitrust literature as "monopsony" (buyer-side monopoly).</div>
+        </div>
+      </div>
+
+      <div class="region-case">
+        <div class="region-case-left">
+          <div class="region-case-region">United States — Urban</div>
+          <div class="region-case-corp">UnitedHealth Group</div>
+          <span class="pill women">Healthcare</span>
+        </div>
+        <div>
+          <div class="region-case-name">UnitedHealth Group's vertical integration controls insurance, pharmacy benefit management, and physician practices — 100M enrollees</div>
+          <div class="region-case-desc">UnitedHealth Group is simultaneously the nation's largest health insurer (Aetna + UnitedHealthcare), the largest pharmacy benefit manager (OptumRx, 1.6B prescriptions annually), and the largest employer of physicians (Optum Health, 90,000+ physicians). This vertical integration creates structural conflict: the same entity decides what care is covered (insurer), negotiates drug prices (PBM), and delivers care (Optum physicians). Academic research documents higher claim denial rates and narrower formularies in vertically integrated systems; the company reported $22B profit in 2023 while denial rates for prior authorization increased 14%.</div>
+        </div>
+      </div>
+
+      <div class="region-case">
+        <div class="region-case-left">
+          <div class="region-case-region">Global</div>
+          <div class="region-case-corp">Shein / Zara / H&amp;M</div>
+          <span class="pill immig">Fast fashion</span>
+        </div>
+        <div>
+          <div class="region-case-name">Fast fashion industry produces 10% of global carbon emissions and generates 92M tons of textile waste annually</div>
+          <div class="region-case-desc">The three largest fast fashion companies — Shein, Inditex (Zara), and H&M — produce collectively over 6 billion garments annually. The industry's carbon footprint exceeds that of the aviation and shipping sectors combined. Shein produces up to 10,000 new styles daily; 73% of fast fashion ends in landfill or incineration. In Bangladesh, Cambodia, and Vietnam — where the majority of manufacturing occurs — garment workers earn $95–$150/month, well below living wage benchmarks. Supply chain audit failures result in labor rights violations at subcontractor level going largely undetected.</div>
+        </div>
+      </div>
+
+      <div class="region-case">
+        <div class="region-case-left">
+          <div class="region-case-region">United States</div>
+          <div class="region-case-corp">Amazon / Meta / Google / Apple / Microsoft</div>
+          <span class="pill surv" style="color:var(--mech-prop);background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.35)">Technology</span>
+        </div>
+        <div>
+          <div class="region-case-name">Five companies control 65% of US digital advertising, cloud infrastructure, and e-commerce — creating platform dependency at every layer</div>
+          <div class="region-case-desc">Amazon controls 37.8% of US e-commerce while competing with sellers on its own platform; Google controls 89% of search advertising and uses its position to preference its own products (2023 DOJ antitrust ruling); Meta and Google together control 60% of US digital advertising; Amazon Web Services, Microsoft Azure, and Google Cloud control 67% of cloud infrastructure. Congressional testimony by small business owners documents pricing power, preferencing, and data extraction by platform owners who simultaneously act as infrastructure providers and direct competitors.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 5 — DOWNSTREAM CONSEQUENCE INDICATORS
+       ══════════════════════════════════════════════════════════ -->
+  <section class="mn-section">
+    <div class="mn-section-head">
+      <p class="section-label">Section 5 — Downstream consequence indicators</p>
+    </div>
+
+    <div class="consequence-grid">
+
+      <div class="consequence-card health">
+        <div class="consequence-title">Health consequences of healthcare consolidation</div>
+        <div class="consequence-sub">Source: Health Affairs, JAMA, Kaiser Family Foundation — data pipeline not yet connected</div>
+        <div class="consequence-stat">+18%</div>
+        <div class="consequence-desc">
+          Increase in hospital prices in markets with high consolidation vs. competitive markets (Health Affairs 2023).
+          Hospital mergers since 2010: 1,600+. Newly consolidated markets show 18–54% price increases within 3 years.
+          Prior authorization denial rates increased 67% 2019–2023 across major insurers. Average US healthcare spending per capita: $13,500 — 2× comparable OECD countries with better outcomes on most measures.
+        </div>
+      </div>
+
+      <div class="consequence-card climate">
+        <div class="consequence-title">Environmental consequences of consolidated food &amp; fashion</div>
+        <div class="consequence-sub">Source: IPCC, Ellen MacArthur Foundation, FAO</div>
+        <div class="consequence-stat">10%</div>
+        <div class="consequence-desc">
+          Share of global greenhouse gas emissions attributable to fast fashion alone. Industrial animal agriculture (controlled by 4 firms in beef, 3 in pork) produces 14.5% of global emissions per FAO.
+          The top 20 food and beverage corporations generate more plastic waste annually than 180 countries combined.
+          Methane from consolidated livestock operations is 80× more potent than CO₂ over 20 years.
+        </div>
+      </div>
+
+      <div class="consequence-card labor">
+        <div class="consequence-title">Labor consequences of monopsonistic markets</div>
+        <div class="consequence-sub">Source: Economic Policy Institute, BLS, DOL</div>
+        <div class="consequence-stat">−22%</div>
+        <div class="consequence-desc">
+          Estimated wage suppression in highly concentrated local labor markets vs. competitive markets (Council of Economic Advisers).
+          Non-compete agreement prevalence rose to 38% of US workers by 2023 — including workers earning minimum wage — limiting geographic mobility and wage competition.
+          Amazon warehouse injury rate: 9.1 per 100 workers vs. 3.3 industry average; company controls 37% of US e-commerce creating limited alternative employer pressure.
+        </div>
+      </div>
+
+      <div class="consequence-card price">
+        <div class="consequence-title">Consumer price consequences of platform and retail concentration</div>
+        <div class="consequence-sub">Source: Consumer Financial Protection Bureau, FTC, academic literature</div>
+        <div class="consequence-stat">$1,400</div>
+        <div class="consequence-desc">
+          Estimated annual cost to US households of market power pricing across healthcare, food, and financial services (Roosevelt Institute 2023). Healthcare: $500–$700B in excess costs annually.
+          Airline consolidation (4 carriers control 80% of US seats) drove average domestic fare increase of 28% since 2010 while service quality declined on measured metrics.
+          Platform fees charged by Amazon to third-party sellers increased from 19% to 50% of revenue between 2014–2023.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <footer>
+    Framework informed by Levitsky &amp; Ziblatt, V-Dem, Freedom House, Polity5. &nbsp;·&nbsp;
+    Every indicator is <a href="#">defined and sourced</a>. &nbsp;·&nbsp;
+    Analysis, not advocacy.
+  </footer>
+
+  <div id="mn-tooltip"></div>
+
+
+  <script>
+  // ── PIE CHART DATA ────────────────────────────────────────────────────────────
+  const sectorData = [
+    {
+      id: 'healthcare',
+      label: 'Healthcare Insurance',
+      slices: [
+        { corp: 'UnitedHealth Group', pct: 28, color: '#7c3aed',
+          facts: 'Largest US health insurer. Reported $22B net income (2023) while increasing claim denial rates. Optum division employs 90,000+ physicians.' },
+        { corp: 'CVS Health / Aetna', pct: 17, color: '#9f44f5',
+          facts: 'Second-largest insurer post-Aetna acquisition ($69B, 2018). Also controls Caremark pharmacy benefit management and MinuteClinic chain.' },
+        { corp: 'Elevance (Anthem)', pct: 15, color: '#a855f7',
+          facts: 'Covers 45M+ members across 14 Blue Cross Blue Shield plans. CEO compensation: $21M (2023).' },
+        { corp: 'Cigna / Evernorth', pct: 11, color: '#c084fc',
+          facts: 'Controls Express Scripts, the largest pharmacy benefit manager by volume. Revenue: $195B (2023).' },
+        { corp: 'Humana', pct: 9, color: '#d8b4fe',
+          facts: 'Largest Medicare Advantage insurer by enrollment. Announced merger discussions with Cigna in 2023 (ultimately abandoned under antitrust pressure).' },
+        { corp: 'All others', pct: 20, color: '#2e3a58', facts: 'Remaining regional and smaller insurers.' }
+      ]
+    },
+    {
+      id: 'food',
+      label: 'Food &amp; Beverage',
+      slices: [
+        { corp: 'Nestlé', pct: 22, color: '#ea580c',
+          facts: 'World\'s largest food company by revenue ($95B). Owns 2,000+ brands. Faced repeated controversies over infant formula marketing, water extraction rights, and child labor in cocoa supply chains.' },
+        { corp: 'PepsiCo', pct: 18, color: '#f97316',
+          facts: 'Revenue: $91B. Controls Lay\'s, Doritos, Quaker, Gatorade. Produces 23 billion servings/year. Ranked top-10 plastic polluter globally by Break Free From Plastic 2023.' },
+        { corp: 'The Coca-Cola Company', pct: 16, color: '#fb923c',
+          facts: 'Operates in 200+ countries. Sells 2B servings/day. World\'s largest consumer of sugar. Coca-Cola cheaper than water in multiple Latin American regions. 3rd-largest plastic polluter globally.' },
+        { corp: 'Unilever', pct: 14, color: '#fdba74',
+          facts: 'Controls Dove, Ben & Jerry\'s, Hellmann\'s, Lipton. Revenue: $60B. Under persistent criticism for greenwashing claims vs. actual plastic reduction performance.' },
+        { corp: 'Kraft Heinz / Mondelēz', pct: 12, color: '#fed7aa',
+          facts: 'Combined entity from 3G Capital / Berkshire merger. Known for aggressive cost-cutting reducing R&D and food quality investment.' },
+        { corp: 'All others', pct: 18, color: '#2e3a58', facts: 'Remaining food and beverage companies.' }
+      ]
+    },
+    {
+      id: 'tech',
+      label: 'Technology Platforms',
+      slices: [
+        { corp: 'Amazon', pct: 23, color: '#0369a1',
+          facts: 'Controls 37.8% of US e-commerce, 33% of cloud (AWS), 13% of digital advertising. 2023 DOJ sued over anti-competitive practices. Injury rate 2.7× industry average in warehouses.' },
+        { corp: 'Microsoft', pct: 21, color: '#0284c7',
+          facts: 'Controls 34% of cloud infrastructure (Azure). Acquired LinkedIn, GitHub, Activision Blizzard ($69B). Office 365 lock-in affects 400M monthly active users.' },
+        { corp: 'Alphabet (Google)', pct: 20, color: '#0ea5e9',
+          facts: 'Controls 89% of US search advertising. DOJ antitrust ruling (2023): illegally maintained search monopoly. Controls Android OS (72% of mobile global market share).' },
+        { corp: 'Apple', pct: 15, color: '#38bdf8',
+          facts: 'App Store commission 15–30% on $1.1T in transactions. EU ruling: monopolistic App Store practices. Controls 57% of US smartphone market.' },
+        { corp: 'Meta', pct: 11, color: '#7dd3fc',
+          facts: 'Facebook + Instagram + WhatsApp: 3.9B monthly active users. FTC antitrust suit ongoing. 60% of digital ad revenue flows to Google or Meta.' },
+        { corp: 'All others', pct: 10, color: '#2e3a58', facts: 'Remaining platforms and cloud providers.' }
+      ]
+    },
+    {
+      id: 'fashion',
+      label: 'Fast Fashion / Retail',
+      slices: [
+        { corp: 'Inditex (Zara)', pct: 26, color: '#db2777',
+          facts: 'Largest fast fashion company by revenue (€35.9B). Produces 840M garments/year. Zara introduces ~24 new collections annually vs. traditional 2. Supplier audit failures documented in Bangladesh and Morocco.' },
+        { corp: 'H&M Group', pct: 20, color: '#ec4899',
+          facts: 'Revenue: $22B. Burns unsold stock; 2017: $4.3B in unsold inventory. Sustainability report criticized as greenwashing by Changing Markets Foundation (2023).' },
+        { corp: 'Shein', pct: 18, color: '#f472b6',
+          facts: 'Produces 6,000–10,000 new styles daily. Average garment price: $7–$15. UK investigation found workers paid £3/hour. Valued at $66B despite no US listing. Exploits de minimis import rule ($800 exemption) to avoid US duties.' },
+        { corp: 'Fast Retailing (Uniqlo)', pct: 10, color: '#f9a8d4',
+          facts: 'Revenue: $22B. Accused of sourcing cotton from Xinjiang despite forced labor reports. Sued in France under duty of vigilance law (2021).' },
+        { corp: 'LVMH / Kering (luxury)', pct: 14, color: '#fce7f3',
+          facts: 'Controls Louis Vuitton, Dior, Gucci, Saint Laurent. Revenue: $86B (LVMH). Accused of copying independent designer work. French court ruling on labor practices (2019).' },
+        { corp: 'All others', pct: 12, color: '#2e3a58', facts: 'Remaining apparel and retail companies.' }
+      ]
+    }
+  ];
+
+  // ── BUILD PIE CARDS ───────────────────────────────────────────────────────────
+  const tooltip = document.getElementById('mn-tooltip');
+  const pieGrid = document.getElementById('pie-grid');
+
+  function buildPieCard(sector) {
+    const card = document.createElement('div');
+    card.className = 'pie-card';
+    card.dataset.sector = sector.id;
+
+    card.innerHTML = `
+      <div class="pie-card-title">${sector.label}</div>
+      <div class="pie-card-sub">Market share by revenue — hover a slice for profile</div>
+      <div class="pie-svg-wrap">
+        <svg class="pie-svg" width="180" height="180" viewBox="-90 -90 180 180"></svg>
+      </div>
+      <div class="pie-legend"></div>
+    `;
+    pieGrid.appendChild(card);
+
+    const svg = d3.select(card.querySelector('svg'));
+    const pie = d3.pie().value(d => d.pct).sort(null);
+    const arc = d3.arc().innerRadius(34).outerRadius(82);
+    const arcHover = d3.arc().innerRadius(34).outerRadius(88);
+
+    svg.selectAll('path')
+      .data(pie(sector.slices))
+      .join('path')
+        .attr('d', arc)
+        .attr('fill', d => d.data.color)
+        .attr('stroke', 'var(--bg)')
+        .attr('stroke-width', 1.5)
+        .attr('opacity', 0.85)
+        .style('cursor', 'pointer')
+        .on('mousemove', function(event, d) {
+          d3.select(this).attr('d', arcHover).attr('opacity', 1);
+          tooltip.innerHTML = `
+            <div class="tt-corp">${d.data.corp}</div>
+            <div class="tt-pct">${d.data.pct}% market share &nbsp;·&nbsp; ${sector.label}</div>
+            <div class="tt-facts">${d.data.facts}</div>
+          `;
+          tooltip.style.opacity = '1';
+          tooltip.style.left = (event.clientX + 14) + 'px';
+          tooltip.style.top  = (event.clientY - 10) + 'px';
+        })
+        .on('mouseleave', function() {
+          d3.select(this).attr('d', arc).attr('opacity', 0.85);
+          tooltip.style.opacity = '0';
+        });
+
+    const legend = card.querySelector('.pie-legend');
+    sector.slices.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'pie-legend-item';
+      item.innerHTML = `
+        <div class="pie-legend-swatch" style="background:${s.color}"></div>
+        <span>${s.corp}</span>
+        <span class="pie-legend-pct">${s.pct}%</span>
+      `;
+      legend.appendChild(item);
+    });
+  }
+
+  sectorData.forEach(buildPieCard);
+
+  // ── SECTOR TAB FILTER ─────────────────────────────────────────────────────────
+  const tabs = document.querySelectorAll('.sector-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const filter = tab.dataset.sector;
+      document.querySelectorAll('.pie-card').forEach(card => {
+        card.style.display = (filter === 'all' || card.dataset.sector === filter) ? '' : 'none';
+      });
+    });
+  });
+
+
+  // ── RATE OF CHANGE CHART ──────────────────────────────────────────────────────
+  (function buildRocChart() {
+    const years = [2000,2003,2006,2009,2012,2015,2018,2021,2024];
+    const smBiz   = [100, 97, 94, 82, 79, 74, 70, 65, 61]; // index, 2000=100
+    const topFour = [100,108,118,125,136,148,162,176,188]; // index
+    const antitrust = [45, 38, 32, 28, 22, 20, 18, 14, 11]; // DOJ/FTC actions
+
+    const container = document.getElementById('roc-chart').parentElement;
+    const W = container.clientWidth - 32;
+    const margin = { top: 14, right: 60, bottom: 36, left: 50 };
+    const H = 200;
+    const iW = W - margin.left - margin.right;
+    const iH = H - margin.top - margin.bottom;
+
+    const svg = d3.select('#roc-chart')
+      .attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('height', H);
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear().domain([2000,2024]).range([0,iW]);
+    const y = d3.scaleLinear().domain([0,220]).range([iH,0]).nice();
+    const yR = d3.scaleLinear().domain([0,55]).range([iH,0]).nice();
+
+    // Grid
+    g.append('g').call(d3.axisLeft(y).ticks(5).tickSize(-iW).tickFormat(''))
+      .call(a => a.select('.domain').remove())
+      .call(a => a.selectAll('line').attr('stroke','#2e3a58').attr('stroke-dasharray','3 3').attr('opacity',0.4));
+
+    // Small business line
+    const smLine = d3.line().x((_,i) => x(years[i])).y((d) => y(d)).curve(d3.curveMonotoneX);
+    g.append('path').datum(smBiz).attr('fill','none').attr('stroke','#4a7fc1').attr('stroke-width',2).attr('opacity',0.8).attr('d', smLine);
+    g.selectAll('.sm-dot').data(smBiz).join('circle').attr('class','sm-dot')
+      .attr('cx',(_,i) => x(years[i])).attr('cy',d => y(d)).attr('r',3).attr('fill','#4a7fc1').attr('opacity',0.8);
+
+    // Top-4 line
+    const topLine = d3.line().x((_,i) => x(years[i])).y((d) => y(d)).curve(d3.curveMonotoneX);
+    g.append('path').datum(topFour).attr('fill','none').attr('stroke','#dc2626').attr('stroke-width',2).attr('opacity',0.8).attr('d', topLine);
+    g.selectAll('.top-dot').data(topFour).join('circle').attr('class','top-dot')
+      .attr('cx',(_,i) => x(years[i])).attr('cy',d => y(d)).attr('r',3).attr('fill','#dc2626').attr('opacity',0.8);
+
+    // Antitrust dashed line (right axis)
+    const atLine = d3.line().x((_,i) => x(years[i])).y((d) => yR(d)).curve(d3.curveMonotoneX);
+    g.append('path').datum(antitrust).attr('fill','none').attr('stroke','#d4a017').attr('stroke-width',1.5)
+      .attr('stroke-dasharray','5 3').attr('opacity',0.7).attr('d', atLine);
+
+    // Axes
+    g.append('g').attr('transform',`translate(0,${iH})`)
+      .call(d3.axisBottom(x).tickFormat(d3.format('d')).ticks(years.length))
+      .call(a => a.select('.domain').attr('stroke','#2e3a58'))
+      .call(a => a.selectAll('text').attr('font-family','Arial,sans-serif').attr('font-size','10').attr('fill','#8e99b4'));
+    g.append('g').call(d3.axisLeft(y).ticks(5))
+      .call(a => a.select('.domain').remove())
+      .call(a => a.selectAll('text').attr('font-family','Arial,sans-serif').attr('font-size','10').attr('fill','#8e99b4'));
+    svg.append('g').attr('transform',`translate(${W - margin.right + 8},${margin.top})`)
+      .call(d3.axisRight(yR).ticks(5))
+      .call(a => a.select('.domain').remove())
+      .call(a => a.selectAll('text').attr('font-family','Arial,sans-serif').attr('font-size','10').attr('fill','#d4a017').attr('opacity',0.7));
+
+    // Axis labels
+    svg.append('text').attr('x', margin.left + iW/2).attr('y', H - 4)
+      .attr('text-anchor','middle').attr('font-family','Arial,sans-serif').attr('font-size','10').attr('fill','#8e99b4').text('Year');
+    svg.append('text').attr('transform',`translate(12,${margin.top + iH/2})rotate(-90)`)
+      .attr('text-anchor','middle').attr('font-family','Arial,sans-serif').attr('font-size','10').attr('fill','#8e99b4').text('Index (2000 = 100)');
+    svg.append('text').attr('transform',`translate(${W-8},${margin.top + iH/2})rotate(90)`)
+      .attr('text-anchor','middle').attr('font-family','Arial,sans-serif').attr('font-size','10').attr('fill','#d4a017').attr('opacity',0.7).text('Antitrust actions');
+  })();
+  </script>
+
+</body>
+</html>

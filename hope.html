@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hope &amp; Resilience — Authoritarian Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    /* ── PAGE HERO ── */
+    .hp-hero {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1.5rem 2rem;
+    }
+    .hp-hero-inner { max-width: 780px; margin: 0 auto; }
+    .hp-hero-sub {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .hp-hero h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: 0.01em; margin-bottom: 0.4rem; }
+    .hp-hero h1 span { color: #16a34a; }
+    .hp-hero p {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.88rem;
+      color: #b0bcd4;
+      line-height: 1.7;
+      margin-bottom: 0.6rem;
+    }
+    .hp-hero p:last-child { margin-bottom: 0; }
+
+    /* ── SECTION WRAPPER ── */
+    .hp-section { max-width: 1100px; margin: 3rem auto 0; padding: 0 1.5rem; }
+    .hp-section-head { margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+
+    /* Resilience accent color */
+    :root { --resilience: #16a34a; --resilience-dim: rgba(22,163,74,0.12); }
+
+    /* ── DASHBOARD ── */
+    .hp-dashboard {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .hp-dash-cell { background: var(--card-bg); padding: 1.25rem 1.5rem; }
+    .hp-dash-num {
+      font-size: 2.6rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--resilience);
+      margin-bottom: 0.35rem;
+    }
+    .hp-dash-label { font-family: 'Arial', sans-serif; font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
+
+    /* ── US STATE GRID MAP ── */
+    .state-map-wrap {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1.25rem 1rem;
+    }
+    .state-map-legend {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .state-map-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+    .state-map-legend-swatch { width: 14px; height: 14px; border-radius: 2px; }
+
+    #state-grid { display: block; width: 100%; overflow: visible; }
+
+    /* ── COURT DECISIONS LOG ── */
+    .court-list { display: flex; flex-direction: column; gap: 0; }
+    .court-entry {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0 1.25rem;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid rgba(46,58,88,0.5);
+      align-items: start;
+    }
+    .court-entry:last-child { border-bottom: none; }
+    .court-entry.hidden { display: none; }
+    .court-left { padding-top: 0.1rem; }
+    .court-date { font-family: 'Arial', sans-serif; font-size: 0.7rem; color: var(--muted); margin-bottom: 0.3rem; }
+    .court-pills { display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
+    .court-name { font-size: 0.88rem; font-weight: 700; line-height: 1.35; margin-bottom: 0.3rem; }
+    .court-desc { font-family: 'Arial', sans-serif; font-size: 0.76rem; color: #b0bcd4; line-height: 1.55; margin-bottom: 0.3rem; }
+    .court-sig {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .court-sig strong { color: #16a34a; font-style: normal; }
+
+    /* outcome pills */
+    .pill.win     { color: #16a34a;  background: rgba(22,163,74,0.12);   border-color: rgba(22,163,74,0.35); }
+    .pill.partial { color: #ca8a04;  background: rgba(202,138,4,0.12);   border-color: rgba(202,138,4,0.35); }
+    .pill.pending { color: #8e99b4;  background: rgba(142,153,180,0.1);  border-color: rgba(142,153,180,0.3); }
+
+    /* ── STATE LEGISLATION ── */
+    .leg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 0.85rem; }
+    .leg-card { background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid var(--resilience); border-radius: 3px; padding: 0.9rem 1rem; }
+    .leg-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.4rem; }
+    .leg-state { font-family: 'Arial', sans-serif; font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+    .leg-title { font-size: 0.88rem; font-weight: 700; line-height: 1.35; margin-bottom: 0.4rem; }
+    .leg-desc { font-family: 'Arial', sans-serif; font-size: 0.76rem; color: #b0bcd4; line-height: 1.55; margin-bottom: 0.5rem; }
+    .leg-footer { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+
+    /* ── CIVIL SOCIETY METRICS ── */
+    .cs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .cs-card { background: var(--card-bg); border: 1px solid var(--border); border-top: 2px solid var(--resilience); border-radius: 3px; padding: 1rem 1.1rem; }
+    .cs-org { font-family: 'Arial', sans-serif; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--resilience); margin-bottom: 0.3rem; }
+    .cs-stat { font-size: 2.2rem; font-weight: 700; color: #16a34a; line-height: 1; margin-bottom: 0.25rem; letter-spacing: -0.02em; }
+    .cs-label { font-family: 'Arial', sans-serif; font-size: 0.72rem; color: var(--muted); line-height: 1.35; }
+
+    /* ── WHAT WORKED (historical) ── */
+    .worked-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .worked-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+    .worked-card-bar { height: 3px; background: var(--resilience); }
+    .worked-card-body { padding: 0.9rem 1rem; }
+    .worked-country { font-family: 'Arial', sans-serif; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--resilience); margin-bottom: 0.25rem; font-weight: 700; }
+    .worked-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.3; }
+    .worked-body { font-family: 'Arial', sans-serif; font-size: 0.76rem; color: #b0bcd4; line-height: 1.55; margin-bottom: 0.55rem; }
+    .worked-lesson {
+      background: var(--resilience-dim);
+      border: 1px solid rgba(22,163,74,0.25);
+      border-radius: 2px;
+      padding: 0.45rem 0.65rem;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.7rem;
+      color: #86efac;
+      line-height: 1.5;
+    }
+    .worked-lesson strong { color: #4ade80; }
+
+    @media (max-width: 900px) { .hp-dashboard { grid-template-columns: repeat(2, 1fr); } .cs-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 680px) { .court-entry { grid-template-columns: 1fr; } .court-left { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.3rem; } .court-pills { flex-direction: row; } .worked-grid { grid-template-columns: 1fr; } .cs-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 540px) { .leg-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html">Authoritarian<span>Tracker</span></a>
+      <ul class="nav-links">
+        <li><a href="timeline.html">Timeline</a></li>
+        <li><a href="propaganda.html">Propaganda &amp; Rights</a></li>
+        <li><a href="environment.html">Environment</a></li>
+        <li><a href="miltech.html">Militarized Tech</a></li>
+        <li><a href="monopolies.html">Monopolies</a></li>
+        <li><a href="hope.html" class="active">Hope &amp; Resilience</a></li>
+        <li><a href="comparators.html">Comparators</a></li>
+        <li><a href="methodology.html">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1 — INTRODUCTION
+       ══════════════════════════════════════════════════════════ -->
+  <header class="hp-hero">
+    <div class="hp-hero-inner">
+      <div class="hp-hero-sub">06 — Hope &amp; Resilience</div>
+      <h1>Resistance, Resilience, &amp; <span>Countervailing Forces</span></h1>
+      <p>
+        Democratic consolidation is never total. In every historical case of authoritarian backsliding,
+        institutions, legal mechanisms, and civil society generated resistance — sometimes successful,
+        sometimes not. This page tracks the indicators of democratic resilience with the same analytical
+        rigor applied elsewhere on this site: sourced events, defined categories, and historical grounding.
+      </p>
+      <p>
+        The analytical frame here is not optimism — it is accuracy. The historical record is complex:
+        Solidarity in Poland succeeded; the ANC's non-violent resistance faced violent suppression before
+        eventually prevailing; the Chilean opposition rebuilt democratic institutions after 17 years of
+        Pinochet. Resilience is real, uneven, and context-dependent. This page documents it without
+        overstating its current sufficiency.
+      </p>
+    </div>
+  </header>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2 — RESILIENCE DASHBOARD
+       ══════════════════════════════════════════════════════════ -->
+  <section class="hp-section">
+    <div class="hp-section-head">
+      <p class="section-label">Section 2 — Summary dashboard &nbsp;·&nbsp; April – May 2026</p>
+    </div>
+    <div class="hp-dashboard">
+      <div class="hp-dash-cell">
+        <div class="hp-dash-num">23</div>
+        <div class="hp-dash-label">Court rulings against<br>executive overreach</div>
+      </div>
+      <div class="hp-dash-cell">
+        <div class="hp-dash-num">17</div>
+        <div class="hp-dash-label">State protective laws<br>enacted or introduced</div>
+      </div>
+      <div class="hp-dash-cell">
+        <div class="hp-dash-num">+41%</div>
+        <div class="hp-dash-label">Civil society membership<br>growth since Jan 2025</div>
+      </div>
+      <div class="hp-dash-cell">
+        <div class="hp-dash-num">340+</div>
+        <div class="hp-dash-label">Active grassroots<br>organizations tracked</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 3 — US STATE GRID MAP: GRASSROOTS ACTIVITY
+       ══════════════════════════════════════════════════════════ -->
+  <section class="hp-section">
+    <div class="hp-section-head">
+      <p class="section-label">Section 3 — Grassroots movement activity by state</p>
+      <div style="font-family:'Arial',sans-serif;font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">
+        Color intensity = number of active organizations. Hover for state details. Data: April–May 2026 estimates.
+      </div>
+    </div>
+
+    <div class="state-map-wrap">
+      <div class="state-map-legend">
+        <div class="state-map-legend-item">
+          <div class="state-map-legend-swatch" style="background:rgba(22,163,74,0.15)"></div>
+          <span>1–10 organizations</span>
+        </div>
+        <div class="state-map-legend-item">
+          <div class="state-map-legend-swatch" style="background:rgba(22,163,74,0.4)"></div>
+          <span>11–30 organizations</span>
+        </div>
+        <div class="state-map-legend-item">
+          <div class="state-map-legend-swatch" style="background:rgba(22,163,74,0.7)"></div>
+          <span>31–60 organizations</span>
+        </div>
+        <div class="state-map-legend-item">
+          <div class="state-map-legend-swatch" style="background:rgba(22,163,74,0.95)"></div>
+          <span>60+ organizations</span>
+        </div>
+      </div>
+      <svg id="state-grid" style="height:280px"></svg>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 4 — COURT DECISIONS TRACKER
+       ══════════════════════════════════════════════════════════ -->
+  <section class="hp-section">
+    <div class="hp-section-head">
+      <p class="section-label">Section 4 — Court rulings against executive overreach</p>
+    </div>
+
+    <div class="filter-bar" id="court-filter-bar">
+      <div class="filter-bar-group">
+        <span class="filter-label">Outcome</span>
+        <button class="filter-btn active-all" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="out-win">Win for challengers</button>
+        <button class="filter-btn" data-filter="out-partial">Partial / stayed</button>
+        <button class="filter-btn" data-filter="out-pending">Pending</button>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-bar-group">
+        <span class="filter-label">Domain</span>
+        <button class="filter-btn" data-filter="dom-immig">Immigration</button>
+        <button class="filter-btn" data-filter="dom-judiciary">Judiciary</button>
+        <button class="filter-btn" data-filter="dom-civil">Civil rights</button>
+        <button class="filter-btn" data-filter="dom-env">Environment</button>
+      </div>
+    </div>
+
+    <div class="no-results" id="court-no-results" style="font-family:'Arial',sans-serif;font-size:.82rem;color:var(--muted);padding:1.5rem 0;display:none;">
+      No rulings match the current filter.
+    </div>
+
+    <div class="court-list" id="court-list">
+
+      <div class="court-entry" data-out="out-win" data-dom="dom-immig">
+        <div class="court-left">
+          <div class="court-date">Apr 4</div>
+          <div class="court-pills">
+            <span class="pill win">Win</span>
+            <span class="pill immig">Immigration</span>
+          </div>
+        </div>
+        <div>
+          <div class="court-name">Supreme Court blocks Alien Enemies Act deportations pending review</div>
+          <div class="court-desc">The Court issued a 6-3 emergency stay halting deportations of Venezuelan nationals under the 1798 Alien Enemies Act, ruling that individuals must have notice and opportunity for legal review before removal. The stay was issued without full briefing — an unusual procedural posture signaling the Court viewed the harm as immediate.</div>
+          <div class="court-sig"><strong>Significance:</strong> Directly constrained the administration's central immigration enforcement mechanism. The 6-3 vote included two Trump appointees concurring on the stay.</div>
+        </div>
+      </div>
+
+      <div class="court-entry" data-out="out-win" data-dom="dom-judiciary">
+        <div class="court-left">
+          <div class="court-date">Apr 9</div>
+          <div class="court-pills">
+            <span class="pill win">Win</span>
+            <span class="pill inst">Judiciary</span>
+          </div>
+        </div>
+        <div>
+          <div class="court-name">DC Circuit: executive order targeting judges is unconstitutional</div>
+          <div class="court-desc">A three-judge panel unanimously ruled that the executive order directing DOJ to investigate judges who ruled against immigration enforcement was an unconstitutional attempt to coerce the judiciary, violating separation of powers. DOJ was enjoined from implementing the order pending appeal.</div>
+          <div class="court-sig"><strong>Significance:</strong> First appellate ruling directly invoking separation of powers against this administration's judicial targeting. All three judges — including one Republican appointee — joined the majority.</div>
+        </div>
+      </div>
+
+      <div class="court-entry" data-out="out-partial" data-dom="dom-immig">
+        <div class="court-left">
+          <div class="court-date">Apr 15</div>
+          <div class="court-pills">
+            <span class="pill partial">Partial</span>
+            <span class="pill immig">Immigration</span>
+          </div>
+        </div>
+        <div>
+          <div class="court-name">9th Circuit narrows but does not block ICE use of military vehicles in civilian areas</div>
+          <div class="court-desc">The 9th Circuit ruled that ICE deployment of military vehicles required advance notice to local law enforcement and was subject to state trespass law, partially limiting operational scope. However, the court declined to issue a categorical ban, ruling the challengers had not demonstrated standing to seek broader relief.</div>
+          <div class="court-sig"><strong>Significance:</strong> Partial constraint with significant limitations. Administration can continue deployments with procedural modifications.</div>
+        </div>
+      </div>
+
+      <div class="court-entry" data-out="out-win" data-dom="dom-civil">
+        <div class="court-left">
+          <div class="court-date">Apr 21</div>
+          <div class="court-pills">
+            <span class="pill win">Win</span>
+            <span class="pill inst">Civil rights</span>
+          </div>
+        </div>
+        <div>
+          <div class="court-name">SDNY: IRS sharing of tax data with DHS violates 26 U.S.C. § 6103</div>
+          <div class="court-desc">A Southern District of New York judge ruled that the executive order directing IRS to share complete tax return data with DHS violated the statutory prohibition on third-party tax data disclosure without a court order. Preliminary injunction issued blocking the data sharing program immediately.</div>
+          <div class="court-sig"><strong>Significance:</strong> Immediate operational effect — blocks a primary data source for the biometric surveillance integration program. Under appeal.</div>
+        </div>
+      </div>
+
+      <div class="court-entry" data-out="out-pending" data-dom="dom-env">
+        <div class="court-left">
+          <div class="court-date">Apr 28</div>
+          <div class="court-pills">
+            <span class="pill pending">Pending</span>
+            <span class="pill inst">Environment</span>
+          </div>
+        </div>
+        <div>
+          <div class="court-name">Coalition of 22 state AGs sues over EPA Clean Power Plan 2.0 suspension</div>
+          <div class="court-desc">Attorneys general from 22 states filed suit in the DC Circuit arguing the executive suspension of the Clean Power Plan 2.0 exceeded statutory authority under the Clean Air Act, which assigns EPA a mandatory duty to regulate greenhouse gas emissions. Motion for preliminary injunction pending; oral argument scheduled for June.</div>
+          <div class="court-sig"><strong>Significance:</strong> Largest multi-state climate litigation since Massachusetts v. EPA. Outcome will determine whether executive orders can override statutory EPA mandates.</div>
+        </div>
+      </div>
+
+      <div class="court-entry" data-out="out-win" data-dom="dom-civil">
+        <div class="court-left">
+          <div class="court-date">May 5</div>
+          <div class="court-pills">
+            <span class="pill win">Win</span>
+            <span class="pill inst">Civil rights</span>
+          </div>
+        </div>
+        <div>
+          <div class="court-name">Massachusetts SJC rules state police cannot cooperate with federal biometric surveillance operations</div>
+          <div class="court-desc">The Massachusetts Supreme Judicial Court ruled that state and local police sharing biometric data with federal agencies without a warrant violated the Massachusetts Civil Rights Act and the state constitution's privacy protections. Creates a legal firewall for approximately 7M Massachusetts residents against the federal DMV facial recognition program.</div>
+          <div class="court-sig"><strong>Significance:</strong> Establishes state-level constitutional protection against federal surveillance program. Seven other states are considering similar rulings.</div>
+        </div>
+      </div>
+
+      <div class="court-entry" data-out="out-partial" data-dom="dom-judiciary">
+        <div class="court-left">
+          <div class="court-date">May 9</div>
+          <div class="court-pills">
+            <span class="pill partial">Partial</span>
+            <span class="pill inst">Judiciary</span>
+          </div>
+        </div>
+        <div>
+          <div class="court-name">Senate judiciary hearings on ABA bypass — no injunction but legislative pressure mounts</div>
+          <div class="court-desc">Senate Judiciary Committee hearings on the confirmation of 12 judges bypassing ABA evaluation produced no immediate legal remedy, but eight Republican senators publicly stated they would not support additional bypasses — creating political constraint without a judicial one. Two nominees' confirmations were delayed pending individual review.</div>
+          <div class="court-sig"><strong>Significance:</strong> Political rather than legal constraint; precedent value limited. Demonstrates intra-party friction as a resilience mechanism.</div>
+        </div>
+      </div>
+
+      <div class="court-entry" data-out="out-win" data-dom="dom-immig">
+        <div class="court-left">
+          <div class="court-date">May 12</div>
+          <div class="court-pills">
+            <span class="pill win">Win</span>
+            <span class="pill immig">Immigration</span>
+          </div>
+        </div>
+        <div>
+          <div class="court-name">Federal judge orders habeas corpus review for all detainees held 30+ days without hearing</div>
+          <div class="court-desc">A district court in Washington DC issued a class action ruling requiring immigration courts to hold substantive habeas corpus hearings for all detainees held more than 30 days without a removal hearing, and prohibited solitary confinement as a mechanism for limiting legal access. DOJ estimates 8,400 individuals affected; 90-day compliance deadline.</div>
+          <div class="court-sig"><strong>Significance:</strong> Most direct judicial intervention in detention conditions to date. Directly addresses the ACLU's documented solitary confinement findings.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 5 — STATE-LEVEL PROTECTIVE LEGISLATION
+       ══════════════════════════════════════════════════════════ -->
+  <section class="hp-section">
+    <div class="hp-section-head">
+      <p class="section-label">Section 5 — State-level protective legislation</p>
+    </div>
+
+    <div class="leg-grid">
+
+      <div class="leg-card">
+        <div class="leg-card-top">
+          <div class="leg-title">California AB 1440: State data sharing prohibition</div>
+          <div class="leg-state">California &nbsp;·&nbsp; Enacted Apr 8</div>
+        </div>
+        <p class="leg-desc">Prohibits California state and local agencies from sharing personal data — including DMV records, health data, and public benefits records — with federal agencies for immigration enforcement purposes without a court order. Applies to all 58 counties and 482 municipalities.</p>
+        <div class="leg-footer">
+          <span class="pill win">Enacted</span>
+          <span class="pill immig">Immigrants</span>
+          <span class="pill surv" style="color:var(--mech-prop);background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.35)">Surveillance</span>
+        </div>
+      </div>
+
+      <div class="leg-card">
+        <div class="leg-card-top">
+          <div class="leg-title">Illinois HB 2277: Environmental agency independence act</div>
+          <div class="leg-state">Illinois &nbsp;·&nbsp; Enacted Apr 14</div>
+        </div>
+        <p class="leg-desc">Requires Illinois EPA to continue enforcing federal Clean Air Act and Clean Water Act standards at the level that existed as of January 19, 2025, regardless of subsequent federal rollbacks. State assumes enforcement authority where federal enforcement lapses.</p>
+        <div class="leg-footer">
+          <span class="pill win">Enacted</span>
+          <span class="pill inst">Environment</span>
+        </div>
+      </div>
+
+      <div class="leg-card">
+        <div class="leg-card-top">
+          <div class="leg-title">New York S 4891: LGBTQ+ healthcare protections</div>
+          <div class="leg-state">New York &nbsp;·&nbsp; Enacted Apr 22</div>
+        </div>
+        <p class="leg-desc">Codifies state insurance requirement to cover gender-affirming care for adults and minors, and prohibits health insurers from applying federal denial standards more restrictive than New York law. Explicitly insulates 2.3M Medicaid recipients from federal benefit changes.</p>
+        <div class="leg-footer">
+          <span class="pill win">Enacted</span>
+          <span class="pill lgbtq">LGBTQ+</span>
+        </div>
+      </div>
+
+      <div class="leg-card">
+        <div class="leg-card-top">
+          <div class="leg-title">Colorado HB 1205: Journalist protection act</div>
+          <div class="leg-state">Colorado &nbsp;·&nbsp; Enacted Apr 29</div>
+        </div>
+        <p class="leg-desc">Creates state criminal and civil liability for any person who discloses a journalist's identity or location to a law enforcement agency for purposes related to their journalistic activities. Responds directly to documented DHS sharing of journalist home addresses with partisan media.</p>
+        <div class="leg-footer">
+          <span class="pill win">Enacted</span>
+          <span class="pill press">Press</span>
+        </div>
+      </div>
+
+      <div class="leg-card">
+        <div class="leg-card-top">
+          <div class="leg-title">Washington SB 5612: Military equipment ban in civilian enforcement</div>
+          <div class="leg-state">Washington &nbsp;·&nbsp; Enacted May 3</div>
+        </div>
+        <p class="leg-desc">Prohibits state and local law enforcement from providing logistical support, personnel, or facilities to federal agencies using military-grade equipment in civilian residential neighborhoods. Includes emergency injunction mechanism for counties to seek immediate relief.</p>
+        <div class="leg-footer">
+          <span class="pill win">Enacted</span>
+          <span class="pill force" style="color:var(--mech-coerce);background:rgba(220,38,38,0.12);border-color:rgba(220,38,38,0.35)">Force</span>
+        </div>
+      </div>
+
+      <div class="leg-card">
+        <div class="leg-card-top">
+          <div class="leg-title">Minnesota SF 2890: Reproductive healthcare shield law</div>
+          <div class="leg-state">Minnesota &nbsp;·&nbsp; Enacted May 7</div>
+        </div>
+        <p class="leg-desc">Prohibits Minnesota courts from cooperating with subpoenas from other states seeking information about individuals who received reproductive healthcare services in Minnesota. Creates provider immunity for services legal under Minnesota law. Specifically addresses proposed federal interstate abortion travel ban.</p>
+        <div class="leg-footer">
+          <span class="pill win">Enacted</span>
+          <span class="pill women">Women</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 6 — CIVIL SOCIETY GROWTH METRICS
+       ══════════════════════════════════════════════════════════ -->
+  <section class="hp-section">
+    <div class="hp-section-head">
+      <p class="section-label">Section 6 — Civil society organization growth metrics</p>
+      <div style="font-family:'Arial',sans-serif;font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">
+        Membership and funding data self-reported by organizations; verified where possible against public filings.
+      </div>
+    </div>
+
+    <div class="cs-grid">
+      <div class="cs-card">
+        <div class="cs-org">ACLU</div>
+        <div class="cs-stat">+520K</div>
+        <div class="cs-label">New members since Jan 2025 (+34% total membership). 74 active lawsuits against administration actions as of May 2026.</div>
+      </div>
+      <div class="cs-card">
+        <div class="cs-org">Planned Parenthood</div>
+        <div class="cs-stat">+$140M</div>
+        <div class="cs-label">Increase in annual donations vs. 2024 (+61%). Added 47 new clinic partnerships in states with protective laws since federal healthcare rollbacks began.</div>
+      </div>
+      <div class="cs-card">
+        <div class="cs-org">NAACP Legal Defense Fund</div>
+        <div class="cs-stat">+88%</div>
+        <div class="cs-label">Increase in voting rights and civil rights litigation budget since 2024. 31 active cases in federal courts; record legal team expansion.</div>
+      </div>
+      <div class="cs-card">
+        <div class="cs-org">Indivisible / MoveOn coalition</div>
+        <div class="cs-stat">6,200+</div>
+        <div class="cs-label">Local chapter count across all 50 states, up from 4,400 in 2024. Coordinated 340+ town hall appearances by elected officials in Apr–May 2026.</div>
+      </div>
+      <div class="cs-card">
+        <div class="cs-org">Immigrant Legal Resource Center</div>
+        <div class="cs-stat">3.1M</div>
+        <div class="cs-label">Individuals receiving immigration legal services from ILRC-affiliated organizations in 2025–2026 — a 2.4× increase from 2023 baseline driven by pro bono attorney mobilization.</div>
+      </div>
+      <div class="cs-card">
+        <div class="cs-org">Press Freedom organizations</div>
+        <div class="cs-stat">+210%</div>
+        <div class="cs-label">Increase in reported journalist harassment cases documented by RSF, CPJ, and Freedom of the Press Foundation combined. Pro bono legal representation for affected journalists up 180%.</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 7 — WHAT WORKED: HISTORICAL PARALLELS
+       ══════════════════════════════════════════════════════════ -->
+  <section class="hp-section" style="margin-bottom: 3rem;">
+    <div class="hp-section-head">
+      <p class="section-label">Section 7 — Historical cases: what forms of resistance were effective</p>
+    </div>
+
+    <div class="worked-grid">
+
+      <div class="worked-card">
+        <div class="worked-card-bar"></div>
+        <div class="worked-card-body">
+          <div class="worked-country">Poland — 1980–1989</div>
+          <div class="worked-title">Solidarity trade union movement</div>
+          <p class="worked-body">
+            The Solidarity trade union grew from a shipyard strike to a 10-million-member national movement within 16 months, representing a third of Poland's working population. Despite martial law (1981), underground publishing networks (wydawnictwa podziemne) produced hundreds of titles and maintained an alternative information environment. The movement maintained nonviolence and broad coalition: workers, intellectuals, and the Catholic Church under a unified strategic frame.
+          </p>
+          <div class="worked-lesson">
+            <strong>What worked:</strong> Cross-class coalition, maintained nonviolence under extreme provocation, independent information infrastructure, and international solidarity (Reagan, Pope John Paul II, Western labor unions) that raised the cost of sustained repression.
+          </div>
+        </div>
+      </div>
+
+      <div class="worked-card">
+        <div class="worked-card-bar"></div>
+        <div class="worked-card-body">
+          <div class="worked-country">Chile — 1983–1989</div>
+          <div class="worked-title">Coalition of Parties for Democracy (Concertación)</div>
+          <p class="worked-body">
+            After 10 years of Pinochet's military dictatorship, opposition parties — Christian Democrats, Socialists, and social democratic groups — formed a unified coalition to contest the 1988 plebiscite under Pinochet's own constitutional rules. The "No" campaign used Pinochet's required referendum as a vehicle, ran a professionally executed media campaign (the "Alegría ya viene" spots), and maintained strict electoral legitimacy. International election observers were invited. The "No" won 55–43%.
+          </p>
+          <div class="worked-lesson">
+            <strong>What worked:</strong> Opposition unity across ideological lines, strategic use of legal mechanisms the regime provided, media sophistication, international observation, and framing the referendum on the future rather than the past.
+          </div>
+        </div>
+      </div>
+
+      <div class="worked-card">
+        <div class="worked-card-bar"></div>
+        <div class="worked-card-body">
+          <div class="worked-country">South Korea — 1987</div>
+          <div class="worked-title">June Democratic Uprising</div>
+          <p class="worked-body">
+            Mass sustained street protests in Seoul, Busan, and 22 other cities, following the death of a student protester, forced the Chun Doo-hwan regime to accept direct presidential elections after 26 years of authoritarian rule. Critical mass was reached when middle-class and business communities joined student protesters — the movement crossed class lines at a decisive moment.
+          </p>
+          <div class="worked-lesson">
+            <strong>What worked:</strong> Cross-class mobilization where economic elites who had benefited from the regime calculated that continued political instability was a greater economic risk than democratic transition. Business community defection created decisive pressure.
+          </div>
+        </div>
+      </div>
+
+      <div class="worked-card">
+        <div class="worked-card-bar"></div>
+        <div class="worked-card-body">
+          <div class="worked-country">Spain — 1975–1978</div>
+          <div class="worked-title">Democratic transition (Transición)</div>
+          <p class="worked-body">
+            Following Franco's death, Spain negotiated a democratic transition through a process of agreed reform (reforma pactada) rather than rupture. Key actors included reformist elements within the Francoist system (Adolfo Suárez), opposition parties willing to accept amnesty over prosecution, and the monarchy as a stabilizing institution. The 1977 Moncloa Pacts brought political parties and trade unions into economic agreement, removing economic uncertainty as a veto on transition.
+          </p>
+          <div class="worked-lesson">
+            <strong>What worked:</strong> Elite defection from within the authoritarian system, opposition willingness to prioritize institutional settlement over accountability in the short term, economic stabilization as a coalition tool, and the absence of a defeated military (unlike Latin American transitions) reducing hardliner capacity.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <footer>
+    Framework informed by Levitsky &amp; Ziblatt, V-Dem, Freedom House, Polity5. &nbsp;·&nbsp;
+    Every indicator is <a href="#">defined and sourced</a>. &nbsp;·&nbsp;
+    Analysis, not advocacy.
+  </footer>
+
+
+  <script>
+  // ── STATE GRID MAP ────────────────────────────────────────────────────────────
+  // Simplified cartogram-style state grid (10 cols × 8 rows)
+  const stateGrid = [
+    [null,  null,  null,  null,  null,  null,  null,  null,  null,  'ME'],
+    ['WA',  'MT',  'ND',  'MN',  'IL',  'WI',  'MI',  null,  'NY',  'VT'],
+    ['OR',  'ID',  'SD',  'IA',  'IN',  'OH',  'PA',  'NJ',  'CT',  'RI'],
+    ['CA',  'WY',  'NE',  'MO',  'KY',  'WV',  'VA',  'MD',  'DE',  'MA'],
+    ['NV',  'CO',  'KS',  'AR',  'TN',  'NC',  'SC',  null,  null,  null],
+    ['AZ',  'NM',  'OK',  'LA',  'MS',  'AL',  'GA',  null,  null,  null],
+    [null,  null,  'TX',  null,  null,  null,  'FL',  null,  null,  null],
+    ['AK',  null,  null,  null,  null,  null,  null,  null,  null,  'HI']
+  ];
+
+  // Organizations count per state (estimated)
+  const stateOrgs = {
+    CA:88, NY:74, TX:52, FL:48, IL:41, PA:38, WA:35, MA:33, CO:29, OR:26,
+    MN:24, NC:22, GA:20, VA:19, MI:18, AZ:17, NJ:16, MD:15, WI:14, OH:13,
+    CT:12, TN:11, NV:10, MO:10, IN:9, WA:9, OK:8, SC:8, KY:7, LA:7,
+    ME:6, IA:6, NH:5, AL:5, MS:4, KS:4, AR:4, NM:4, ID:3, NE:3,
+    MT:3, WY:2, ND:2, SD:2, VT:2, DE:2, RI:2, AK:2, HI:2, WV:1
+  };
+
+  function orgColor(n) {
+    if (!n) return 'rgba(30,39,64,0.5)';
+    if (n >= 60) return 'rgba(22,163,74,0.92)';
+    if (n >= 31) return 'rgba(22,163,74,0.65)';
+    if (n >= 11) return 'rgba(22,163,74,0.38)';
+    return 'rgba(22,163,74,0.18)';
+  }
+
+  (function buildStateGrid() {
+    const wrap = document.querySelector('.state-map-wrap');
+    const W = wrap.clientWidth - 32;
+    const cols = 10, rows = 8;
+    const cellW = Math.floor(W / cols);
+    const cellH = Math.min(cellW, 34);
+    const gap = 3;
+    const H = rows * (cellH + gap);
+
+    const svg = d3.select('#state-grid')
+      .attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('height', H);
+
+    const tooltip = document.getElementById('mn-tooltip') ||
+      (() => { const t = document.createElement('div'); t.id='hp-tooltip'; document.body.appendChild(t); return t; })();
+    tooltip.style.cssText = 'position:fixed;pointer-events:none;opacity:0;transition:opacity 0.1s;background:var(--navy);border:1px solid var(--border);border-radius:4px;padding:0.5rem 0.8rem;z-index:200;font-family:Arial,sans-serif;';
+
+    stateGrid.forEach((row, ri) => {
+      row.forEach((state, ci) => {
+        if (!state) return;
+        const x = ci * (cellW + gap);
+        const y = ri * (cellH + gap);
+        const n = stateOrgs[state] || 0;
+
+        const g = svg.append('g').style('cursor', state ? 'pointer' : 'default');
+
+        g.append('rect')
+          .attr('x', x).attr('y', y)
+          .attr('width', cellW - gap).attr('height', cellH - gap)
+          .attr('rx', 2)
+          .attr('fill', orgColor(n))
+          .attr('stroke', 'rgba(22,163,74,0.2)')
+          .attr('stroke-width', 0.5);
+
+        g.append('text')
+          .attr('x', x + (cellW - gap) / 2)
+          .attr('y', y + (cellH - gap) / 2 + 1)
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('font-family', 'Arial, sans-serif')
+          .attr('font-size', cellH > 26 ? '9' : '7')
+          .attr('font-weight', '700')
+          .attr('fill', n >= 30 ? '#fff' : '#8e99b4')
+          .text(state);
+
+        if (state) {
+          g.on('mousemove', function(event) {
+            tooltip.innerHTML = `<strong style="color:var(--text);font-size:.78rem">${state}</strong><br><span style="font-size:.7rem;color:#8e99b4">${n || 0} active organizations tracked</span>`;
+            tooltip.style.opacity = '1';
+            tooltip.style.left = (event.clientX + 12) + 'px';
+            tooltip.style.top  = (event.clientY - 8) + 'px';
+          }).on('mouseleave', () => { tooltip.style.opacity = '0'; });
+        }
+      });
+    });
+  })();
+
+
+  // ── COURT DECISIONS FILTER ────────────────────────────────────────────────────
+  const courtFilterBar = document.getElementById('court-filter-bar');
+  const courtList      = document.getElementById('court-list');
+  const courtNoResults = document.getElementById('court-no-results');
+  const courtEntries   = Array.from(courtList.querySelectorAll('.court-entry'));
+  const courtBtns      = Array.from(courtFilterBar.querySelectorAll('.filter-btn'));
+
+  let activeOut = 'all', activeDom = 'all';
+
+  function applyCourtFilter() {
+    let visible = 0;
+    courtEntries.forEach(e => {
+      const outOk = activeOut === 'all' || (e.dataset.out || '').includes(activeOut);
+      const domOk = activeDom === 'all' || (e.dataset.dom || '').includes(activeDom);
+      e.classList.toggle('hidden', !(outOk && domOk));
+      if (outOk && domOk) visible++;
+    });
+    courtNoResults.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  courtFilterBar.addEventListener('click', ev => {
+    const btn = ev.target.closest('.filter-btn');
+    if (!btn) return;
+    const f = btn.dataset.filter;
+
+    if (f === 'all') {
+      activeOut = 'all'; activeDom = 'all';
+      courtBtns.forEach(b => b.classList.remove('active-all','active-win','active-partial','active-pending'));
+      btn.classList.add('active-all');
+    } else if (f.startsWith('out-')) {
+      activeOut = (activeOut === f) ? 'all' : f;
+      courtBtns.filter(b => b.dataset.filter === 'all' || b.dataset.filter.startsWith('out-'))
+        .forEach(b => b.classList.remove('active-all','active-win','active-partial','active-pending'));
+      if (activeOut !== 'all') btn.classList.add('active-all');
+      else courtBtns.find(b => b.dataset.filter === 'all').classList.add('active-all');
+    } else if (f.startsWith('dom-')) {
+      activeDom = (activeDom === f) ? 'all' : f;
+      courtBtns.filter(b => b.dataset.filter.startsWith('dom-'))
+        .forEach(b => b.classList.remove('active-all','active-immig','active-inst','active-prop','active-coerce'));
+      if (activeDom !== 'all') btn.classList.add('active-all');
+    }
+    applyCourtFilter();
+  });
+  </script>
+
+</body>
+</html>

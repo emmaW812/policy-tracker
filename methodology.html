@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Methodology — Authoritarian Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── PAGE HERO ── */
+    .md-hero {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1.5rem 2rem;
+    }
+    .md-hero-inner { max-width: 780px; margin: 0 auto; }
+    .md-hero-sub {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .md-hero h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: 0.01em; margin-bottom: 0.4rem; }
+    .md-hero h1 span { color: var(--blue-light); }
+    .md-hero p {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.88rem;
+      color: #b0bcd4;
+      line-height: 1.7;
+      margin-bottom: 0.6rem;
+    }
+    .md-hero p:last-child { margin-bottom: 0; }
+
+    /* ── SECTION WRAPPER ── */
+    .md-section { max-width: 900px; margin: 3rem auto 0; padding: 0 1.5rem; }
+    .md-section-head { margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+
+    /* ── PROSE BLOCK ── */
+    .md-prose {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.83rem;
+      color: #b0bcd4;
+      line-height: 1.75;
+    }
+    .md-prose p { margin-bottom: 0.9rem; }
+    .md-prose p:last-child { margin-bottom: 0; }
+    .md-prose strong { color: var(--text); font-weight: 600; }
+    .md-prose a { color: var(--blue-light); text-decoration: none; }
+    .md-prose a:hover { text-decoration: underline; }
+
+    /* ── SOURCE CARDS ── */
+    .source-grid { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+    .source-card {
+      background: var(--card-bg);
+      padding: 1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 0 1.25rem;
+    }
+    .source-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.15rem;
+    }
+    .source-org {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.68rem;
+      color: var(--blue-light);
+      margin-bottom: 0.3rem;
+    }
+    .source-type {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .source-desc {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      color: #b0bcd4;
+      line-height: 1.6;
+    }
+    .source-limit {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 0.4rem;
+      padding-left: 0.75rem;
+      border-left: 2px solid var(--border);
+      font-style: italic;
+    }
+
+    /* ── INDICATOR DEFINITIONS ── */
+    .ind-def-list { display: flex; flex-direction: column; gap: 1rem; }
+    .ind-def-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1rem 1.1rem;
+    }
+    .ind-def-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .ind-def-type {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .ind-def-body {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      color: #b0bcd4;
+      line-height: 1.6;
+      margin-bottom: 0.5rem;
+    }
+    .ind-def-source {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .ind-def-limit {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 0.45rem;
+      padding: 0.45rem 0.7rem;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-style: italic;
+    }
+
+    /* ── ASSUMPTION CARDS ── */
+    .assumption-list { display: flex; flex-direction: column; gap: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+    .assumption-item { padding: 0.85rem 1.1rem; border-bottom: 1px solid rgba(46,58,88,0.5); }
+    .assumption-item:last-child { border-bottom: none; }
+    .assumption-num {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 0.2rem;
+      font-weight: 700;
+    }
+    .assumption-claim { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.3rem; color: var(--text); }
+    .assumption-body {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.77rem;
+      color: #b0bcd4;
+      line-height: 1.6;
+    }
+    .assumption-counter {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 0.4rem;
+      padding-left: 0.75rem;
+      border-left: 2px solid var(--muted);
+      font-style: italic;
+    }
+
+    /* ── ONTOLOGY TABLE ── */
+    .ontology-wrap {
+      overflow-x: auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+    }
+    .ontology-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.75rem;
+    }
+    .ontology-table th {
+      background: var(--navy);
+      color: var(--muted);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.6rem 0.9rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .ontology-table td {
+      padding: 0.6rem 0.9rem;
+      color: #b0bcd4;
+      line-height: 1.45;
+      border-bottom: 1px solid rgba(46,58,88,0.4);
+      vertical-align: top;
+    }
+    .ontology-table tr:last-child td { border-bottom: none; }
+    .ontology-table td:first-child { font-weight: 700; color: var(--text); white-space: nowrap; }
+    .ontology-table td:nth-child(2) { color: var(--muted); font-style: italic; }
+
+    /* ── UPDATE LOG ── */
+    .update-log { display: flex; flex-direction: column; gap: 0; }
+    .update-entry {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 0 1rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid rgba(46,58,88,0.4);
+      font-family: 'Arial', sans-serif;
+      font-size: 0.76rem;
+    }
+    .update-entry:last-child { border-bottom: none; }
+    .update-date { color: var(--muted); }
+    .update-desc { color: #b0bcd4; line-height: 1.45; }
+
+    @media (max-width: 680px) {
+      .source-card { grid-template-columns: 1fr; }
+      .update-entry { grid-template-columns: 1fr; }
+      .update-date { margin-bottom: 0.15rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html">Authoritarian<span>Tracker</span></a>
+      <ul class="nav-links">
+        <li><a href="timeline.html">Timeline</a></li>
+        <li><a href="propaganda.html">Propaganda &amp; Rights</a></li>
+        <li><a href="environment.html">Environment</a></li>
+        <li><a href="miltech.html">Militarized Tech</a></li>
+        <li><a href="monopolies.html">Monopolies</a></li>
+        <li><a href="hope.html">Hope &amp; Resilience</a></li>
+        <li><a href="comparators.html">Comparators</a></li>
+        <li><a href="methodology.html" class="active">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       INTRODUCTION
+       ══════════════════════════════════════════════════════════ -->
+  <header class="md-hero">
+    <div class="md-hero-inner">
+      <div class="md-hero-sub">08 — Methodology</div>
+      <h1>Indicators, Sources, &amp; <span>Assumptions</span></h1>
+      <p>
+        This page documents every analytical choice made in constructing this site: which indicators
+        are tracked, where data comes from, what the known limitations are, and what assumptions
+        the framework rests on. It is modeled after academic supplementary materials.
+      </p>
+      <p>
+        The function of this page is to distinguish analysis from advocacy. Any reader should be able
+        to disagree with our methodology, identify our assumptions, and check our sources. If the
+        framework is sound, it should survive scrutiny. If it has flaws, this is where they should
+        be findable.
+      </p>
+    </div>
+  </header>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1 — ANALYTICAL FRAMEWORK
+       ══════════════════════════════════════════════════════════ -->
+  <section class="md-section">
+    <div class="md-section-head">
+      <p class="section-label">Section 1 — Analytical framework</p>
+    </div>
+
+    <div class="md-prose">
+      <p>
+        The site's core framework divides authoritarian development into three phases: <strong>Preconditions</strong>
+        (structural vulnerabilities that enable authoritarian emergence), <strong>Emergence</strong>
+        (the active phase where specific mechanisms are deployed), and <strong>Consolidation</strong>
+        (structural changes that entrench power and make reversal harder). This framework is derived
+        from the comparative politics literature, primarily:
+      </p>
+      <p>
+        <strong>Levitsky &amp; Ziblatt (2018), "How Democracies Die"</strong> — provides the core
+        framework for identifying warning signs within democratic systems, distinguishing democratic
+        backsliding from revolutionary authoritarianism. Their "litmus tests" for authoritarian behavior
+        (rejection of democratic rules, denial of legitimacy to opponents, toleration of violence,
+        willingness to curtail civil liberties) inform the event classification on this site.
+      </p>
+      <p>
+        <strong>Linz (1978), "The Breakdown of Democratic Regimes"</strong> — foundational typology
+        of democratic breakdown mechanisms; distinguishes between authoritarian, totalitarian, and
+        post-totalitarian regimes. Informs the comparator selection (Hungary, Turkey, Venezuela are
+        "competitive authoritarian" regimes; Cuba and China are not).
+      </p>
+      <p>
+        <strong>Levitsky &amp; Way (2010), "Competitive Authoritarianism"</strong> — defines the
+        hybrid regime type most relevant to contemporary backsliding cases: formal democratic
+        institutions combined with systematic incumbent advantage. The Hungarian and Turkish profiles
+        in the comparators section draw directly on this typology.
+      </p>
+      <p>
+        The three-phase framework is not predictive of outcome. It is a classification tool that
+        allows consistent coding of events across time and comparison across cases. Events can be
+        assigned to phases based on their mechanism type (precondition indicator, emergence mechanism,
+        consolidation mechanism) — not based on an overall assessment of "how authoritarian" the
+        current situation is. That overall assessment is not made explicitly on this site.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2 — DATA SOURCES
+       ══════════════════════════════════════════════════════════ -->
+  <section class="md-section">
+    <div class="md-section-head">
+      <p class="section-label">Section 2 — Primary data sources</p>
+    </div>
+
+    <div class="source-grid">
+
+      <div class="source-card">
+        <div>
+          <div class="source-name">V-Dem (Varieties of Democracy)</div>
+          <div class="source-org">University of Gothenburg — V-Dem Institute</div>
+          <div class="source-type">Democracy indices &amp; indicators</div>
+        </div>
+        <div>
+          <div class="source-desc">
+            The most comprehensive available dataset of democracy indicators, covering 202 countries
+            from 1789 to the present. Includes 500+ indicators across electoral, liberal, participatory,
+            deliberative, and egalitarian democracy dimensions. Country-year estimates are derived from
+            expert coding supplemented by quantitative data. The Liberal Democracy Index (LDI) used in
+            historical comparator profiles is the v2x_libdem variable in V-Dem Dataset v13 (2023).
+          </div>
+          <div class="source-limit">
+            Limitation: Expert-coded indicators introduce inter-rater variability; coders are drawn
+            disproportionately from academic networks. Real-time updates are not available — data
+            typically lags 12–18 months. V-Dem data for the United States 2025–2026 is not yet
+            available; this site does not compute a composite DHI score pending that data.
+          </div>
+        </div>
+      </div>
+
+      <div class="source-card">
+        <div>
+          <div class="source-name">Freedom House</div>
+          <div class="source-org">Freedom House (Washington DC)</div>
+          <div class="source-type">Annual country assessments</div>
+        </div>
+        <div>
+          <div class="source-desc">
+            Annual "Freedom in the World" and "Freedom of the Press" assessments covering political
+            rights, civil liberties, and press freedom for 195 countries. Assessments are based on
+            a structured scoring rubric applied by regional analysts. Used in this site primarily
+            for historical comparator status assessments (Hungary, Turkey, Venezuela classifications).
+          </div>
+          <div class="source-limit">
+            Limitation: Freedom House receives substantial US government funding (NED, USAID), which
+            creates a perception of bias — the organization is generally seen as more critical of
+            left-wing authoritarian governments than right-wing ones. This site cross-checks Freedom
+            House assessments against V-Dem and Polity5 where available.
+          </div>
+        </div>
+      </div>
+
+      <div class="source-card">
+        <div>
+          <div class="source-name">Polity5</div>
+          <div class="source-org">Center for Systemic Peace</div>
+          <div class="source-type">Regime authority scores</div>
+        </div>
+        <div>
+          <div class="source-desc">
+            Long-running dataset assigning each country-year a Polity score from −10 (full autocracy)
+            to +10 (full democracy) based on the competitiveness of political participation, executive
+            recruitment, and executive constraints. Used on this site primarily for historical
+            longitudinal context, not for current US assessment.
+          </div>
+          <div class="source-limit">
+            Limitation: The Polity framework focuses heavily on formal institutional attributes and
+            is less sensitive to informal norm erosion — exactly the type of backsliding most relevant
+            to Hungary, Turkey, and the current US context. A country can score +9 on Polity while
+            undergoing significant informal democratic erosion.
+          </div>
+        </div>
+      </div>
+
+      <div class="source-card">
+        <div>
+          <div class="source-name">Primary news sources</div>
+          <div class="source-org">Multiple outlets — see individual event citations</div>
+          <div class="source-type">Event documentation</div>
+        </div>
+        <div>
+          <div class="source-desc">
+            Individual events on this site are sourced to primary news sources, official documents
+            (executive orders, court filings, congressional testimony, agency press releases), and
+            legal databases (Westlaw, CourtListener) where applicable. Events are not included based
+            on a single source; where possible, multiple independent sources confirm.
+          </div>
+          <div class="source-limit">
+            Limitation: All events in the current version are hardcoded with illustrative sourcing.
+            In v2, events will link to verified primary sources. Users should independently verify
+            any specific event before relying on it for research or reporting purposes.
+          </div>
+        </div>
+      </div>
+
+      <div class="source-card">
+        <div>
+          <div class="source-name">Protect Democracy / Trump Action Tracker</div>
+          <div class="source-org">Protect Democracy (protectdemocracy.org)</div>
+          <div class="source-type">Event log reference</div>
+        </div>
+        <div>
+          <div class="source-desc">
+            Protect Democracy's authoritarian action watch and the independent Trump Action Tracker
+            (trumpactiontracker.info) are used as reference logs for event identification. These
+            organizations maintain rolling inventories of democratic norm violations with sourcing.
+            This site independently classifies events using its own phase framework rather than
+            adopting their classification schemes.
+          </div>
+          <div class="source-limit">
+            Limitation: Both organizations are explicitly advocacy-oriented in addition to tracking.
+            This site uses them for event identification only, applying its own analytical framework
+            independently.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 3 — INDICATOR DEFINITIONS
+       ══════════════════════════════════════════════════════════ -->
+  <section class="md-section">
+    <div class="md-section-head">
+      <p class="section-label">Section 3 — Indicator definitions</p>
+    </div>
+
+    <div class="ind-def-list">
+
+      <div class="ind-def-card">
+        <div class="ind-def-name">Phase classification</div>
+        <div class="ind-def-type">Event-level indicator — all pages</div>
+        <div class="ind-def-body">
+          Each event is classified as Phase 1, 2, or 3 based on its mechanism type, not on an overall
+          assessment of where the US currently stands. Phase 1 events are indicators of structural
+          preconditions (suppression of economic data, institutional trust metrics). Phase 2 events
+          are active mechanism deployments (executive orders targeting specific groups, surveillance
+          expansions, propaganda patterns). Phase 3 events are structural changes that would be
+          difficult to reverse (constitutional reinterpretation, court packing, biometric infrastructure
+          that persists beyond any administration).
+        </div>
+        <div class="ind-def-source">Derived from: Levitsky &amp; Ziblatt (2018); Bermeo (2016) "On Democratic Backsliding"</div>
+        <div class="ind-def-limit">
+          Known limitation: Phase boundaries are not always clean. An executive order may have both
+          Phase 2 (deployment) and Phase 3 (structural) characteristics. Where ambiguous, events are
+          classified by their most significant long-term mechanism.
+        </div>
+      </div>
+
+      <div class="ind-def-card">
+        <div class="ind-def-name">Institutional severity score</div>
+        <div class="ind-def-type">Event-level indicator — index page</div>
+        <div class="ind-def-body">
+          Five-point dot scale reflecting the estimated difficulty of reversing the event's institutional
+          effects. Score 1: no structural change, purely rhetorical. Score 2: administrative change,
+          easily reversed by subsequent executive action. Score 3: structural change, requires deliberate
+          reversal action but achievable within normal democratic processes. Score 4: changes to
+          institutions whose reversal requires legislative supermajority or extended political effort.
+          Score 5: constitutional or de facto permanent changes.
+        </div>
+        <div class="ind-def-source">Scoring is editorial judgment by site authors, not derived from a specific index.</div>
+        <div class="ind-def-limit">
+          Known limitation: Severity scores are the most subjective element on this site. Two reasonable
+          people may score the same event differently. In v2, severity scores will be assessed by a
+          panel rather than a single rater.
+        </div>
+      </div>
+
+      <div class="ind-def-card">
+        <div class="ind-def-name">Mechanism taxonomy</div>
+        <div class="ind-def-type">Classification system — propaganda &amp; rights page</div>
+        <div class="ind-def-body">
+          Events on the propaganda and rights tracker are classified into three mechanism categories:
+          Propaganda (narrative control, scapegoating, enemy framing, manufactured consent),
+          Coercive (censorship by intimidation, detention, surveillance-enabled enforcement), and
+          Legal/Institutional (use of existing legal mechanisms — licensing, contracting, regulatory
+          review — to achieve censorship or suppression outcomes without explicit constitutional
+          challenge). The taxonomy is derived from Hannah Arendt's "Origins of Totalitarianism"
+          (mechanism categories), Carl Schmitt's state of exception literature (legal mechanism
+          analysis), and IB History DP authoritarian states curriculum.
+        </div>
+        <div class="ind-def-source">Primary: Arendt (1951); Schmitt (1922); Paxton (2004) "Anatomy of Fascism"</div>
+        <div class="ind-def-limit">
+          Known limitation: The taxonomy is simplified for accessibility. Academic literature on
+          authoritarian communication distinguishes many more subcategories. Events may fit multiple
+          categories; the primary mechanism is used for classification.
+        </div>
+      </div>
+
+      <div class="ind-def-card">
+        <div class="ind-def-name">Scientific institution integrity status</div>
+        <div class="ind-def-type">Institution-level indicator — environment page</div>
+        <div class="ind-def-body">
+          Three-tier status system for federal scientific institutions: Green (no significant changes
+          reported in staffing, funding, or publications), Yellow (significant changes in one dimension),
+          Red (significant changes in two or more dimensions, or one severe structural change such as
+          an entire office elimination or mass Schedule F reclassification). Status is based on
+          documented actions, not on assessment of scientific output quality.
+        </div>
+        <div class="ind-def-source">Derived from: environmental and scientific watchdog reporting; official agency announcements; academic freedom monitoring organizations</div>
+        <div class="ind-def-limit">
+          Known limitation: "No significant changes reported" (green) is not the same as "no significant
+          changes occurred." This system tracks documented changes; undocumented or unreported changes
+          cannot be captured.
+        </div>
+      </div>
+
+      <div class="ind-def-card">
+        <div class="ind-def-name">Resilience court ruling significance</div>
+        <div class="ind-def-type">Event-level indicator — hope &amp; resilience page</div>
+        <div class="ind-def-body">
+          Court rulings are assessed on two dimensions: (1) immediate operational effect — does the
+          ruling constrain an administration action currently in force, or is it procedural? (2)
+          durability — is the ruling likely to be upheld on appeal given circuit and Supreme Court
+          composition? Significance notes explicitly address both dimensions.
+        </div>
+        <div class="ind-def-source">Assessment is based on legal analysis from public interest law organizations and academic legal commentary, not this site's own legal expertise.</div>
+        <div class="ind-def-limit">
+          Known limitation: Predicting appellate outcomes involves genuine uncertainty. Significance
+          assessments reflect the state of legal analysis at the time of the ruling, not ultimate outcomes.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 4 — SITE ASSUMPTIONS
+       ══════════════════════════════════════════════════════════ -->
+  <section class="md-section">
+    <div class="md-section-head">
+      <p class="section-label">Section 4 — Site assumptions (explicit)</p>
+    </div>
+
+    <div class="assumption-list">
+
+      <div class="assumption-item">
+        <div class="assumption-num">Assumption 01</div>
+        <div class="assumption-claim">Comparative historical analysis is the appropriate method for assessing current democratic health</div>
+        <div class="assumption-body">
+          This site assumes that events have meaning beyond their immediate context — that an executive
+          order targeting judges is better understood in light of Hungary 2011 than in isolation, and
+          that this comparative framing reveals something real about mechanism type and trajectory. The
+          alternative view is that all political events are context-specific and historical comparison
+          is misleading.
+        </div>
+        <div class="assumption-counter">
+          Challenge: The US institutional context (federal system, First Amendment, independent military,
+          strong civil society) differs significantly from Hungary in 2010. Mechanisms that succeeded
+          there may not succeed here. This site does not claim they will; it claims the mechanism type
+          is recognizable.
+        </div>
+      </div>
+
+      <div class="assumption-item">
+        <div class="assumption-num">Assumption 02</div>
+        <div class="assumption-claim">The framework applies symmetrically across the political spectrum</div>
+        <div class="assumption-body">
+          The three-phase framework is designed to identify authoritarian consolidation regardless of
+          ideological direction. The comparator set includes left-wing (Cuba, Venezuela/Chávez) and
+          right-wing (Hungary, Turkey) cases. The indicators are defined in terms of mechanism type
+          — media control, judicial manipulation, surveillance — not political content.
+        </div>
+        <div class="assumption-counter">
+          Challenge: Selecting which events to track involves editorial judgment, and the current US
+          events tracked on this site reflect events occurring under a right-wing administration. A
+          future version tracking a left-wing administration using similar mechanisms should apply
+          the same framework. The methodology does not change with the political direction of the actor.
+        </div>
+      </div>
+
+      <div class="assumption-item">
+        <div class="assumption-num">Assumption 03</div>
+        <div class="assumption-claim">Democratic norms have intrinsic value beyond their procedural function</div>
+        <div class="assumption-body">
+          This site treats democratic institutions — judicial independence, press freedom, free and fair
+          elections — as valuable in themselves, not merely as means to good policy outcomes. An
+          authoritarian government may produce some good policy outcomes; this site's framework would
+          still identify its mechanisms as authoritarian. This reflects a substantive commitment to
+          liberal democracy as a value, not merely an analytical stance.
+        </div>
+        <div class="assumption-counter">
+          Challenge: This is a normative assumption, not a factual one. Readers who believe democratic
+          procedures are only instrumentally valuable — worth preserving only when they produce good
+          outcomes — will disagree with the site's framing. This disagreement is legitimate and should
+          be acknowledged.
+        </div>
+      </div>
+
+      <div class="assumption-item">
+        <div class="assumption-num">Assumption 04</div>
+        <div class="assumption-claim">Resilience indicators are analytically as important as authoritarian indicators</div>
+        <div class="assumption-body">
+          The hope and resilience page is not included as a disclaimer or to soften the site's analysis —
+          it reflects the actual historical record. In every case of democratic backsliding, significant
+          institutional and civil society resistance occurred. The resistance sometimes succeeded
+          (Chile, South Korea, Poland); it sometimes failed (Hungary, Turkey, Venezuela). Accurately
+          representing both dimensions is required for methodological integrity.
+        </div>
+        <div class="assumption-counter">
+          Challenge: There is a selection effect in resilience assessment: the cases where resistance
+          "worked" may be structurally different from current US conditions in ways that make comparison
+          misleading. This limitation is noted in the hope &amp; resilience page's historical parallels section.
+        </div>
+      </div>
+
+      <div class="assumption-item">
+        <div class="assumption-num">Assumption 05</div>
+        <div class="assumption-claim">Transparency about limitations does not undermine the analysis</div>
+        <div class="assumption-body">
+          This site's approach is that explicit acknowledgment of methodological limitations — in this
+          methodology page and in individual indicator definitions — strengthens rather than weakens
+          the analysis. A site that claims certainty it does not have would be less credible than one
+          that maps its uncertainty accurately.
+        </div>
+        <div class="assumption-counter">
+          Challenge: Extensive caveating can be used rhetorically to create false equivalence — "both
+          sides have limitations, therefore nothing can be concluded." This site's caveats are specific
+          and bounded; they do not imply that all conclusions are equally uncertain.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 5 — TAGGING ONTOLOGY
+       ══════════════════════════════════════════════════════════ -->
+  <section class="md-section">
+    <div class="md-section-head">
+      <p class="section-label">Section 5 — Event tagging ontology</p>
+    </div>
+
+    <div class="md-prose" style="margin-bottom:1rem">
+      <p>Events across the site are tagged using a structured vocabulary. The primary dimensions are mechanism type, affected group, phase, and policy type. The full vocabulary is defined below.</p>
+    </div>
+
+    <div class="ontology-wrap">
+      <table class="ontology-table">
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Dimension</th>
+            <th>Definition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Propaganda</td>
+            <td>Mechanism type</td>
+            <td>Narrative control mechanisms: scapegoating, enemy framing, manufactured consent, information environment manipulation</td>
+          </tr>
+          <tr>
+            <td>Coercive</td>
+            <td>Mechanism type</td>
+            <td>Force or intimidation mechanisms: detention, censorship by intimidation, surveillance-enabled enforcement, paramilitary deployment</td>
+          </tr>
+          <tr>
+            <td>Legal / Institutional</td>
+            <td>Mechanism type</td>
+            <td>Use of existing legal mechanisms to achieve authoritarian outcomes: licensing, contracting, regulatory review, reclassification</td>
+          </tr>
+          <tr>
+            <td>Executive order</td>
+            <td>Policy type</td>
+            <td>Direct presidential orders invoking executive authority; does not require congressional approval</td>
+          </tr>
+          <tr>
+            <td>Agency restructuring</td>
+            <td>Policy type</td>
+            <td>Organizational changes to federal agencies: eliminating offices, replacing leadership, merging functions</td>
+          </tr>
+          <tr>
+            <td>Regulatory rollback</td>
+            <td>Policy type</td>
+            <td>Suspension or reversal of existing rules and enforcement standards</td>
+          </tr>
+          <tr>
+            <td>Intl. withdrawal</td>
+            <td>Policy type</td>
+            <td>Withdrawal from international agreements or bodies that provided external accountability</td>
+          </tr>
+          <tr>
+            <td>Women</td>
+            <td>Affected group</td>
+            <td>Events disproportionately targeting women's rights, healthcare, political representation, or bodily autonomy</td>
+          </tr>
+          <tr>
+            <td>LGBTQ+</td>
+            <td>Affected group</td>
+            <td>Events targeting LGBTQ+ rights, identity recognition, healthcare access, or legal status</td>
+          </tr>
+          <tr>
+            <td>Press</td>
+            <td>Affected group</td>
+            <td>Events targeting journalists, news organizations, or the broader information ecosystem</td>
+          </tr>
+          <tr>
+            <td>Immigrants</td>
+            <td>Affected group</td>
+            <td>Events targeting non-citizens, asylum seekers, undocumented persons, or legal immigrants</td>
+          </tr>
+          <tr>
+            <td>Political opposition</td>
+            <td>Affected group</td>
+            <td>Events targeting elected officials, political parties, civil society organizations, or political activists</td>
+          </tr>
+          <tr>
+            <td>Phase 1</td>
+            <td>Phase</td>
+            <td>Structural preconditions: economic data suppression, institutional trust metrics, polarization indicators</td>
+          </tr>
+          <tr>
+            <td>Phase 2</td>
+            <td>Phase</td>
+            <td>Active mechanism deployment: specific executive actions, propaganda patterns, surveillance expansions</td>
+          </tr>
+          <tr>
+            <td>Phase 3</td>
+            <td>Phase</td>
+            <td>Consolidation: structural changes difficult to reverse through normal democratic processes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 6 — WHAT THIS SITE DOES NOT CLAIM
+       ══════════════════════════════════════════════════════════ -->
+  <section class="md-section">
+    <div class="md-section-head">
+      <p class="section-label">Section 6 — What this site does not claim</p>
+    </div>
+
+    <div class="md-prose">
+      <p><strong>This site does not claim that the United States is currently an authoritarian state.</strong>
+      The framework tracks mechanisms and indicators, not conclusions. Individual event classifications
+      are based on mechanism type. An overall assessment of democratic health requires a composite
+      index, which this site has deferred pending methodological decisions about V-Dem indicator
+      weighting and real-time data availability.</p>
+
+      <p><strong>This site does not claim the US trajectory is irreversible.</strong>
+      Every historical comparator case included in the site has experienced some form of resistance.
+      In cases where resistance succeeded (Chile, South Korea, Poland, Spain), it succeeded in part
+      because of factors this site tracks on the hope and resilience page. The site documents both
+      authoritarian mechanisms and countervailing forces with equal seriousness.</p>
+
+      <p><strong>This site does not claim the framework predicts outcome.</strong>
+      The three-phase framework is a diagnostic and classification tool. It can identify mechanism
+      types and track their deployment; it cannot predict how far consolidation will proceed, whether
+      it will succeed, or what countervailing forces will prevent it. Prediction would require a
+      probabilistic model this site does not attempt.</p>
+
+      <p><strong>This site does not claim its event selection is complete.</strong>
+      The events tracked here represent a curated, illustrative set. Many qualifying events are not
+      included. The framework does not claim to be a comprehensive database; it claims to be an
+      analytically consistent selection from a larger universe of events.</p>
+
+      <p><strong>This site does not claim neutrality.</strong>
+      The framework assumes that democratic institutions — judicial independence, press freedom,
+      rule of law, separation of powers — have value. Tracking their erosion is not neutral; it
+      reflects a commitment to those values. What the site claims is methodological consistency:
+      the same framework would track left-wing authoritarian mechanisms with equal rigor.
+      "Analysis, not advocacy" means the analytical framework is not deployed in service of a
+      partisan position — not that the site has no values.</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 7 — OPEN QUESTIONS
+       ══════════════════════════════════════════════════════════ -->
+  <section class="md-section">
+    <div class="md-section-head">
+      <p class="section-label">Section 7 — Open methodological questions</p>
+    </div>
+
+    <div class="assumption-list">
+
+      <div class="assumption-item">
+        <div class="assumption-num">Open question 01</div>
+        <div class="assumption-claim">Y-axis composition for the main DHI chart</div>
+        <div class="assumption-body">
+          The planned main visualization requires a composite Democratic Health Index as the y-axis.
+          This requires decisions about: which V-Dem sub-indicators to include; how to weight them;
+          how to handle disagreements between V-Dem, Freedom House, and Polity5 on the same
+          country-year; and whether to use V-Dem's pre-built liberal democracy index or construct
+          a custom composite. This decision has been deferred. Using a pre-built index (V-Dem LDI)
+          is simpler and more transparent; constructing a custom index allows more precise targeting
+          but introduces additional methodological choices that require justification.
+        </div>
+      </div>
+
+      <div class="assumption-item">
+        <div class="assumption-num">Open question 02</div>
+        <div class="assumption-claim">NLP sentiment analysis methodology</div>
+        <div class="assumption-body">
+          The v2 sentiment analysis feature (placeholders currently on propaganda, environment,
+          and militarized tech pages) requires decisions about: which platforms to include;
+          how to handle bot activity; how to define demographic segments; how to handle platform
+          API access changes; what baseline period to use; and how to address the well-documented
+          problem that social media data overrepresents certain demographics. These questions
+          are unresolved.
+        </div>
+      </div>
+
+      <div class="assumption-item">
+        <div class="assumption-num">Open question 03</div>
+        <div class="assumption-claim">Update cadence and maintenance</div>
+        <div class="assumption-body">
+          The site currently contains hardcoded data through May 2026. For ongoing utility,
+          events need to be added regularly. This requires decisions about: how frequently to
+          update; who reviews events for inclusion; what quality standards apply; and whether
+          events should be added individually or in batches. No update process has been
+          established for the current version.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 8 — VERSION HISTORY
+       ══════════════════════════════════════════════════════════ -->
+  <section class="md-section" style="margin-bottom:3rem">
+    <div class="md-section-head">
+      <p class="section-label">Section 8 — Version history</p>
+    </div>
+
+    <div class="update-log">
+      <div class="update-entry">
+        <div class="update-date">May 2026</div>
+        <div class="update-desc">V1.0 — Initial site launch. Hardcoded data through May 2026. All pages built: Timeline, Propaganda &amp; Rights, Environment &amp; Science, Militarized Technology, Monopolies, Hope &amp; Resilience, Historical Comparators, Methodology. NLP/sentiment analysis sections are placeholder only. Main DHI composite chart deferred pending methodology decisions.</div>
+      </div>
+      <div class="update-entry">
+        <div class="update-date">Planned: v2.0</div>
+        <div class="update-desc">Live event data pipeline. V-Dem API integration for composite DHI y-axis. NLP sentiment analysis for propaganda, environment, and militarized tech pages. Real-time source linking. Audience-facing methodology review by political science consultants.</div>
+      </div>
+    </div>
+  </section>
+
+
+  <footer>
+    Framework informed by Levitsky &amp; Ziblatt, V-Dem, Freedom House, Polity5. &nbsp;·&nbsp;
+    Every indicator is defined and sourced on this page. &nbsp;·&nbsp;
+    Analysis, not advocacy.
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Historical Comparators — Authoritarian Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── PAGE HERO ── */
+    .cp-hero {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1.5rem 2rem;
+    }
+    .cp-hero-inner { max-width: 780px; margin: 0 auto; }
+    .cp-hero-sub {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .cp-hero h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: 0.01em; margin-bottom: 0.4rem; }
+    .cp-hero h1 span { color: var(--blue-light); }
+    .cp-hero p {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.88rem;
+      color: #b0bcd4;
+      line-height: 1.7;
+      margin-bottom: 0.6rem;
+    }
+    .cp-hero p:last-child { margin-bottom: 0; }
+
+    /* ── SECTION WRAPPER ── */
+    .cp-section { max-width: 1100px; margin: 3rem auto 0; padding: 0 1.5rem; }
+    .cp-section-head { margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+
+    /* ── COMPARATOR SELECTOR TABS ── */
+    .comp-tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .comp-tab {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.35rem 1rem;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .comp-tab:hover { border-color: var(--blue); color: var(--blue-light); }
+    .comp-tab.active { border-color: var(--blue); color: var(--blue-light); background: rgba(74,127,193,0.12); }
+
+    /* ── COMPARATOR PROFILE ── */
+    .comp-profile { display: none; }
+    .comp-profile.active { display: block; }
+
+    /* Profile header */
+    .comp-profile-header {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem 2rem;
+    }
+    .comp-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.15rem; }
+    .comp-subtitle { font-family: 'Arial', sans-serif; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.8rem; }
+    .comp-desc { font-family: 'Arial', sans-serif; font-size: 0.82rem; color: #b0bcd4; line-height: 1.65; }
+    .comp-meta { display: flex; flex-direction: column; gap: 0.65rem; }
+    .comp-meta-row { display: flex; gap: 0.75rem; align-items: baseline; }
+    .comp-meta-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      min-width: 90px;
+    }
+    .comp-meta-val { font-family: 'Arial', sans-serif; font-size: 0.8rem; color: var(--text); }
+    .comp-meta-val.phase1 { color: var(--phase1); }
+    .comp-meta-val.phase2 { color: var(--phase2); }
+    .comp-meta-val.phase3 { color: var(--phase3); }
+
+    /* Phase analysis sections */
+    .comp-phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .comp-phase-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .comp-phase-header {
+      padding: 0.65rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .comp-phase-num {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.15rem;
+      font-weight: 700;
+    }
+    .comp-phase-card.p1 .comp-phase-header { border-top: 2px solid var(--phase1); }
+    .comp-phase-card.p2 .comp-phase-header { border-top: 2px solid var(--phase2); }
+    .comp-phase-card.p3 .comp-phase-header { border-top: 2px solid var(--phase3); }
+    .comp-phase-card.p1 .comp-phase-num { color: var(--phase1); }
+    .comp-phase-card.p2 .comp-phase-num { color: var(--phase2); }
+    .comp-phase-card.p3 .comp-phase-num { color: var(--phase3); }
+    .comp-phase-title { font-size: 0.82rem; font-weight: 700; }
+    .comp-phase-body { padding: 0.75rem 0.9rem; }
+    .comp-phase-events { display: flex; flex-direction: column; gap: 0.5rem; }
+    .comp-phase-event { font-family: 'Arial', sans-serif; font-size: 0.74rem; color: #b0bcd4; line-height: 1.45; padding-left: 0.75rem; position: relative; }
+    .comp-phase-event::before { content: '–'; position: absolute; left: 0; color: var(--muted); }
+    .comp-year { color: var(--muted); font-size: 0.68rem; }
+
+    /* Resistance + outcome */
+    .comp-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .comp-resistance, .comp-outcome {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1rem 1.1rem;
+    }
+    .comp-block-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    .comp-resistance .comp-block-label { color: #16a34a; }
+    .comp-block-body { font-family: 'Arial', sans-serif; font-size: 0.78rem; color: #b0bcd4; line-height: 1.6; }
+    .comp-outcome-status {
+      display: inline-block;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.5rem;
+      border-radius: 2px;
+      margin-bottom: 0.5rem;
+    }
+    .cp-us-note {
+      background: rgba(74,127,193,0.06);
+      border: 1px solid rgba(74,127,193,0.2);
+      border-left: 3px solid var(--blue);
+      border-radius: 2px;
+      padding: 0.65rem 0.9rem;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.76rem;
+      color: #b0bcd4;
+      line-height: 1.55;
+      margin-top: 1.25rem;
+    }
+    .cp-us-note strong { color: var(--blue-light); }
+
+    /* ── COMPARISON TABLE ── */
+    .comp-table-wrap {
+      overflow-x: auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+    }
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Arial', sans-serif;
+      font-size: 0.74rem;
+    }
+    .comp-table th {
+      background: var(--navy);
+      color: var(--muted);
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.65rem 0.9rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .comp-table td {
+      padding: 0.7rem 0.9rem;
+      color: #b0bcd4;
+      line-height: 1.45;
+      border-bottom: 1px solid rgba(46,58,88,0.4);
+      vertical-align: top;
+    }
+    .comp-table tr:last-child td { border-bottom: none; }
+    .comp-table td:first-child { color: var(--text); font-weight: 700; white-space: nowrap; }
+    .comp-table td.yes { color: #dc2626; }
+    .comp-table td.partial { color: #ca8a04; }
+    .comp-table td.no { color: #16a34a; }
+
+    @media (max-width: 800px) {
+      .comp-profile-header { grid-template-columns: 1fr; }
+      .comp-phases { grid-template-columns: 1fr; }
+      .comp-bottom { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html">Authoritarian<span>Tracker</span></a>
+      <ul class="nav-links">
+        <li><a href="timeline.html">Timeline</a></li>
+        <li><a href="propaganda.html">Propaganda &amp; Rights</a></li>
+        <li><a href="environment.html">Environment</a></li>
+        <li><a href="miltech.html">Militarized Tech</a></li>
+        <li><a href="monopolies.html">Monopolies</a></li>
+        <li><a href="hope.html">Hope &amp; Resilience</a></li>
+        <li><a href="comparators.html" class="active">Comparators</a></li>
+        <li><a href="methodology.html">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       INTRODUCTION
+       ══════════════════════════════════════════════════════════ -->
+  <header class="cp-hero">
+    <div class="cp-hero-inner">
+      <div class="cp-hero-sub">07 — Historical Comparators Library</div>
+      <h1>Democratic Backsliding: <span>Five Historical Cases</span></h1>
+      <p>
+        This library provides concise analytical profiles of five historical cases of democratic
+        backsliding or authoritarian consolidation, organized using the same three-phase framework
+        applied to the United States throughout this site. Each profile identifies the mechanisms
+        used, the resistance encountered, and how the case resolved — or has not yet resolved.
+      </p>
+      <p>
+        The five cases were selected to span different types: two are democratic backsliding cases
+        from within functioning democracies (Hungary, Venezuela); two are post-revolutionary
+        consolidations of initially broad-based movements (Cuba, China); one is the most-studied
+        contemporary case of electoral authoritarianism using legal mechanisms (Turkey). Cases with
+        revolutionary or military origins (Pinochet, Stalin) are deliberately excluded to keep the
+        comparison set closest to the US institutional context.
+      </p>
+      <p>
+        Historical comparisons are analytical, not rhetorical. They identify structural similarities
+        in mechanism, not equivalence in scale or outcome.
+      </p>
+    </div>
+  </header>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       COMPARATOR PROFILES
+       ══════════════════════════════════════════════════════════ -->
+  <section class="cp-section">
+    <div class="cp-section-head">
+      <p class="section-label">Section 1 — Case profiles (organized by phase framework)</p>
+    </div>
+
+    <div class="comp-tabs" id="comp-tabs">
+      <button class="comp-tab active" data-comp="orban">Hungary — Orbán</button>
+      <button class="comp-tab" data-comp="erdogan">Turkey — Erdoğan</button>
+      <button class="comp-tab" data-comp="chavez">Venezuela — Chávez</button>
+      <button class="comp-tab" data-comp="castro">Cuba — Castro</button>
+      <button class="comp-tab" data-comp="mao">China — Mao</button>
+    </div>
+
+
+    <!-- ─── ORBÁN / HUNGARY ─────────────────────────────────── -->
+    <div class="comp-profile active" id="profile-orban">
+
+      <div class="comp-profile-header">
+        <div>
+          <div class="comp-name">Viktor Orbán &nbsp;/&nbsp; Hungary</div>
+          <div class="comp-subtitle">Democratic backsliding within EU membership &nbsp;·&nbsp; 2010–present</div>
+          <p class="comp-desc">
+            The clearest contemporary parallel to the US institutional context. Orbán returned to power
+            in 2010 with a supermajority in parliament and used it systematically to reshape the
+            constitutional framework, judiciary, media landscape, and electoral rules — all through
+            formally legal mechanisms. By 2014 he had declared his intention to build an "illiberal
+            state." Hungary remains a formal democracy with regular elections but V-Dem classifies it
+            as an "electoral autocracy" — a hybrid regime where elections occur but the playing field
+            is systematically tilted.
+          </p>
+        </div>
+        <div class="comp-meta">
+          <div class="comp-meta-row"><div class="comp-meta-label">Type</div><div class="comp-meta-val">Democratic backsliding / electoral autocracy</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Start</div><div class="comp-meta-val">2010 (supermajority won)</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Phase now</div><div class="comp-meta-val phase3">Phase 3 — Consolidation (ongoing)</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Key feature</div><div class="comp-meta-val">All mechanisms formally legal; used existing constitutional procedures</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">V-Dem 2010→2023</div><div class="comp-meta-val">Liberal Democracy Index: 0.68 → 0.19</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Outcome</div><div class="comp-meta-val">Ongoing — Orbán won fourth supermajority in 2022</div></div>
+        </div>
+      </div>
+
+      <div class="comp-phases">
+        <div class="comp-phase-card p1">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 1 — Preconditions</div>
+            <div class="comp-phase-title">Structural vulnerabilities</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">2008:</span> Global financial crisis causes 6.7% GDP contraction; Hungary requires IMF bailout</div>
+              <div class="comp-phase-event"><span class="comp-year">2006–2010:</span> Socialist government corruption scandals; PM admits lying to parliament about economy</div>
+              <div class="comp-phase-event"><span class="comp-year">Structural:</span> Proportional representation system allowed supermajority from 53% vote share</div>
+              <div class="comp-phase-event"><span class="comp-year">Structural:</span> Low cross-party institutional trust following successive government failures</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-phase-card p2">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 2 — Emergence</div>
+            <div class="comp-phase-title">Mechanism deployment</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">2011:</span> New constitution drafted in 8 days, passed without opposition consultation</div>
+              <div class="comp-phase-event"><span class="comp-year">2011:</span> Constitutional Court jurisdiction stripped over budget matters</div>
+              <div class="comp-phase-event"><span class="comp-year">2011:</span> Mandatory retirement age for judges lowered; 274 senior judges removed</div>
+              <div class="comp-phase-event"><span class="comp-year">2012:</span> Public media merged into state-controlled MTVA conglomerate</div>
+              <div class="comp-phase-event"><span class="comp-year">2013:</span> "Soros Plan" campaign begins — scapegoating of financier as national enemy</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-phase-card p3">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 3 — Consolidation</div>
+            <div class="comp-phase-title">Entrenchment</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">2014:</span> Electoral law redrawn; gerrymandering + foreign vote included from ethnic Hungarians abroad</div>
+              <div class="comp-phase-event"><span class="comp-year">2018:</span> "Stop Soros" laws criminalize NGO assistance to asylum seekers</div>
+              <div class="comp-phase-event"><span class="comp-year">2019:</span> Hungarian Academy of Sciences research institutes placed under ministry control</div>
+              <div class="comp-phase-event"><span class="comp-year">2020:</span> COVID emergency powers with no expiration — rule by decree for 18 months</div>
+              <div class="comp-phase-event"><span class="comp-year">2022:</span> 4th consecutive supermajority; opposition coalition fails to break 50%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-bottom">
+        <div class="comp-resistance">
+          <div class="comp-block-label">Resistance &amp; countervailing forces</div>
+          <div class="comp-block-body">
+            European Parliament repeatedly invoked Article 7 proceedings (2018–present); effect limited by unanimity requirement and Polish veto. Constitutional Court initially blocked several Fidesz measures before being packed with loyalists. Civil society organizations maintained visibility but lost funding access when foreign-funded NGO restrictions passed. Independent media contracted to a single online outlet (Telex) after 2020. Opposition united into single coalition in 2022 but lost decisively on tilted electoral terrain. EU withheld €22B in cohesion funds (2022–2024) over rule-of-law concerns.
+          </div>
+        </div>
+        <div class="comp-outcome">
+          <div class="comp-block-label">Outcome &amp; current status</div>
+          <div class="comp-outcome-status" style="background:rgba(192,57,43,0.15);color:#c0392b;border:1px solid rgba(192,57,43,0.3)">Ongoing consolidation</div>
+          <div class="comp-block-body">Hungary remains nominally democratic but is classified as an "electoral autocracy" by V-Dem and "not free" on press freedom by RSF. Orbán won a fourth supermajority in 2022. The EU has been ineffective at reversing backsliding while Hungary retains membership. Key lesson: incremental legal mechanisms applied rapidly over a 2–3 year window proved very difficult to reverse once institutionalized.</div>
+        </div>
+      </div>
+
+      <div class="cp-us-note">
+        <strong>US comparison note:</strong> The Orbán case is the most structurally relevant comparator for the US because both contexts involve democratic backsliding within an existing constitutional framework using legal mechanisms. Key differences: the US has a federal system that provides state-level resistance capacity absent in Hungary; the US Constitution is harder to amend (requiring supermajority); the US judiciary retains more independence than Hungary's did by 2013. Key similarities: executive orders function analogously to Orbán's early decree powers; Schedule F reclassification parallels the Hungarian civil service restructuring; media environment manipulation follows the same playbook with private rather than state actors.
+      </div>
+    </div>
+
+
+    <!-- ─── ERDOĞAN / TURKEY ────────────────────────────────── -->
+    <div class="comp-profile" id="profile-erdogan">
+
+      <div class="comp-profile-header">
+        <div>
+          <div class="comp-name">Recep Tayyip Erdoğan &nbsp;/&nbsp; Turkey</div>
+          <div class="comp-subtitle">Elected leader → electoral authoritarian &nbsp;·&nbsp; 2002–present</div>
+          <p class="comp-desc">
+            Erdoğan's trajectory illustrates how a leader with a genuine democratic electoral mandate
+            can use legal mechanisms to progressively eliminate institutional checks. His early period
+            (2002–2010) was associated with EU accession reforms and expansion of Kurdish cultural rights;
+            the turn toward authoritarianism accelerated after the Gezi Park protests (2013) and the
+            2016 coup attempt, which provided a pretext for massive purges. Turkey moved from a
+            functioning parliamentary democracy to a presidential system with concentrated executive
+            power, minority suppression, and near-total press control in under 15 years.
+          </p>
+        </div>
+        <div class="comp-meta">
+          <div class="comp-meta-row"><div class="comp-meta-label">Type</div><div class="comp-meta-val">Democratic backsliding / competitive authoritarianism</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Start</div><div class="comp-meta-val">2002 (AKP elected); acceleration 2013</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Phase now</div><div class="comp-meta-val phase3">Phase 3 — Consolidation (ongoing)</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Key feature</div><div class="comp-meta-val">Coup attempt used to justify massive purge and constitutional change</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">V-Dem 2010→2023</div><div class="comp-meta-val">Liberal Democracy Index: 0.38 → 0.11</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Outcome</div><div class="comp-meta-val">Ongoing — won narrow presidential elections in 2023</div></div>
+        </div>
+      </div>
+
+      <div class="comp-phases">
+        <div class="comp-phase-card p1">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 1 — Preconditions</div>
+            <div class="comp-phase-title">Structural vulnerabilities</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">1990s:</span> Military coup history created norm of civilian deference to military; institutional trust in courts low</div>
+              <div class="comp-phase-event"><span class="comp-year">2000–2001:</span> Financial crisis; IMF bailout; 9% unemployment; political class discredited</div>
+              <div class="comp-phase-event"><span class="comp-year">Structural:</span> Secular-religious polarization provided Erdoğan a coalition of aggrieved religious conservatives previously excluded from power</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-phase-card p2">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 2 — Emergence</div>
+            <div class="comp-phase-title">Mechanism deployment</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">2013:</span> Gezi Park protests trigger shift; protesters labeled "terrorists"; Twitter blocked</div>
+              <div class="comp-phase-event"><span class="comp-year">2013–2016:</span> 150+ journalists arrested; Turkey becomes world's largest jailer of journalists</div>
+              <div class="comp-phase-event"><span class="comp-year">2014:</span> Direct presidential election gives Erdoğan personal mandate separate from parliament</div>
+              <div class="comp-phase-event"><span class="comp-year">2015–2016:</span> Kurdish political leaders arrested; HDP co-chairs imprisoned; PKK cease-fire ended</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-phase-card p3">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 3 — Consolidation</div>
+            <div class="comp-phase-title">Entrenchment</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">2016:</span> Coup attempt; state of emergency; 152,000 arrested; 125,000 civil servants dismissed</div>
+              <div class="comp-phase-event"><span class="comp-year">2017:</span> Constitutional referendum converts Turkey to presidential system; passes 51.4%</div>
+              <div class="comp-phase-event"><span class="comp-year">2018:</span> New presidential system takes effect; parliamentary oversight reduced</div>
+              <div class="comp-phase-event"><span class="comp-year">2019:</span> Istanbul mayoral election result overturned; re-run ordered (opposition won by larger margin)</div>
+              <div class="comp-phase-event"><span class="comp-year">2023:</span> Won presidential election in runoff; democratic opposition failed to unite effectively</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-bottom">
+        <div class="comp-resistance">
+          <div class="comp-block-label">Resistance &amp; countervailing forces</div>
+          <div class="comp-block-body">Major cities maintained opposition control through elections: Istanbul, Ankara, and İzmir elected CHP opposition mayors in 2019 and 2024, demonstrating urban electoral resilience. Kurds maintained strong bloc voting despite HDP leadership imprisonment. International press freedom organizations documented and publicized journalist imprisonments. The 2019 Istanbul election overturning backfired — the re-run produced a larger opposition margin, demonstrating limits of election manipulation when margins are too large.</div>
+        </div>
+        <div class="comp-outcome">
+          <div class="comp-block-label">Outcome &amp; current status</div>
+          <div class="comp-outcome-status" style="background:rgba(192,57,43,0.15);color:#c0392b;border:1px solid rgba(192,57,43,0.3)">Ongoing consolidation</div>
+          <div class="comp-block-body">Turkey is classified as "not free" by Freedom House and "electoral autocracy" by V-Dem. Key lesson: the 2016 coup attempt, whether partially facilitated or not, served as a decisive turning point — a crisis event that allowed rapid capability expansion far exceeding what the crisis itself required. The magnitude and speed of purges (152,000 in weeks) suggests prior preparation of lists.</div>
+        </div>
+      </div>
+
+      <div class="cp-us-note">
+        <strong>US comparison note:</strong> The "foreign-backed agitator" framing applied to domestic political opponents parallels Erdoğan's terrorist labeling of Kurdish politicians and Gezi protesters. The invocation of the Alien Enemies Act to create emergency detention authority without due process has structural parallels to the post-coup state of emergency. Key difference: the US military has strong institutional norms against political involvement; a manufactured crisis equivalent to the coup attempt would face higher resistance.
+      </div>
+    </div>
+
+
+    <!-- ─── CHÁVEZ / VENEZUELA ──────────────────────────────── -->
+    <div class="comp-profile" id="profile-chavez">
+
+      <div class="comp-profile-header">
+        <div>
+          <div class="comp-name">Hugo Chávez &nbsp;/&nbsp; Venezuela</div>
+          <div class="comp-subtitle">Leftist democratic backsliding via economic populism &nbsp;·&nbsp; 1999–2013</div>
+          <p class="comp-desc">
+            Chávez is the canonical left-wing democratic backsliding case, selected because comparator
+            libraries that include only right-wing cases can be accused of political framing. Chávez
+            won election in 1998 on a genuine anti-corruption, pro-poor platform; his first term saw
+            real poverty reduction. The authoritarian turn accelerated after the 2002 coup attempt
+            against him (which he survived), which he used to purge the military, judiciary, and
+            state oil company PDVSA. By 2005 Venezuela was classified as a "hybrid regime." The
+            Maduro succession (2013) completed consolidation into competitive authoritarianism.
+          </p>
+        </div>
+        <div class="comp-meta">
+          <div class="comp-meta-row"><div class="comp-meta-label">Type</div><div class="comp-meta-val">Left-wing democratic backsliding / competitive authoritarianism</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Start</div><div class="comp-meta-val">1998 (elected); acceleration 2002</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Phase now</div><div class="comp-meta-val phase3">Phase 3 — Deep consolidation under Maduro</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Key feature</div><div class="comp-meta-val">Oil wealth used to fund parallel institutions bypassing formal structures</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">V-Dem 2000→2023</div><div class="comp-meta-val">Liberal Democracy Index: 0.36 → 0.05</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Outcome</div><div class="comp-meta-val">Continued under Maduro; full electoral autocracy</div></div>
+        </div>
+      </div>
+
+      <div class="comp-phases">
+        <div class="comp-phase-card p1">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 1 — Preconditions</div>
+            <div class="comp-phase-title">Structural vulnerabilities</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">1983–1998:</span> "Punto Fijo" two-party system discredited by corruption; 1989 Caracazo massacre killed 276–500</div>
+              <div class="comp-phase-event"><span class="comp-year">1998:</span> 50% poverty rate; oil dependence; massive inequality between oil oligarchy and rural poor</div>
+              <div class="comp-phase-event"><span class="comp-year">Structural:</span> Military tradition of political involvement; 1992 Chávez himself led a coup attempt</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-phase-card p2">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 2 — Emergence</div>
+            <div class="comp-phase-title">Mechanism deployment</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">1999:</span> New "Bolivarian" constitution drafted; Supreme Court expanded from 20 to 32 members</div>
+              <div class="comp-phase-event"><span class="comp-year">2002:</span> Coup attempt against Chávez fails; military and PDVSA oil company purged afterward</div>
+              <div class="comp-phase-event"><span class="comp-year">2004:</span> Supreme Court packed with loyalists; 12 new seats added</div>
+              <div class="comp-phase-event"><span class="comp-year">2004:</span> CONATEL revokes broadcast licenses for critical television stations post-coup</div>
+              <div class="comp-phase-event"><span class="comp-year">2005:</span> Opposition boycotts elections; Chávez allies win all 167 National Assembly seats</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-phase-card p3">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 3 — Consolidation</div>
+            <div class="comp-phase-title">Entrenchment</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">2007:</span> Constitutional referendum to eliminate term limits defeated — he accepted result initially</div>
+              <div class="comp-phase-event"><span class="comp-year">2009:</span> Second referendum passes; term limits eliminated</div>
+              <div class="comp-phase-event"><span class="comp-year">2010:</span> Gerrymandering; PSUV wins 59% of seats on 47% of votes</div>
+              <div class="comp-phase-event"><span class="comp-year">2013:</span> Chávez dies; Maduro wins narrow election; consolidation deepens under economic collapse</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-bottom">
+        <div class="comp-resistance">
+          <div class="comp-block-label">Resistance &amp; countervailing forces</div>
+          <div class="comp-block-body">Private media (RCTV, Globovisión) maintained critical coverage until broadcast licenses were revoked or owners sold under pressure. Opposition won 2007 referendum — Chávez's only electoral defeat. Opposition won National Assembly supermajority in 2015 (67% of seats on 56% of votes); Maduro responded by creating a parallel "Constituent Assembly" in 2017. US and EU sanctions from 2017 onward worsened economic collapse without producing political change. Mass emigration (7M+ by 2023) represents population response — the most significant "exit" (vs. "voice") resistance in the comparative literature.</div>
+        </div>
+        <div class="comp-outcome">
+          <div class="comp-block-label">Outcome &amp; current status</div>
+          <div class="comp-outcome-status" style="background:rgba(192,57,43,0.15);color:#c0392b;border:1px solid rgba(192,57,43,0.3)">Full autocracy under Maduro</div>
+          <div class="comp-block-body">Venezuela is classified "not free" by Freedom House; the 2024 presidential election was widely assessed as fraudulent. Key lesson: oil-funded parallel institutions (missions, armed colectivos) bypassed formal institutional decay and created patron-client networks that survived even dramatic economic collapse. Institutional capacity to resist was lower than in Hungary or Turkey because formal institutions had been more thoroughly hollowed out by the time the economic crisis hit.</div>
+        </div>
+      </div>
+
+      <div class="cp-us-note">
+        <strong>US comparison note:</strong> The Chávez case is included to illustrate that the framework applies to left-wing as well as right-wing backsliding. The US structural parallels are weaker: the US lacks Venezuela's oil-funded patronage capacity; US institutions are significantly more robust; the military is far less politicized. The most relevant mechanism parallel is media control through regulatory pressure (CONATEL license revocation → FCC investigations of critical networks).
+      </div>
+    </div>
+
+
+    <!-- ─── CASTRO / CUBA ──────────────────────────────────── -->
+    <div class="comp-profile" id="profile-castro">
+
+      <div class="comp-profile-header">
+        <div>
+          <div class="comp-name">Fidel Castro &nbsp;/&nbsp; Cuba</div>
+          <div class="comp-subtitle">Revolutionary consolidation into single-party state &nbsp;·&nbsp; 1959–1965</div>
+          <p class="comp-desc">
+            Cuba under Castro represents a different type from Hungary or Turkey: a revolutionary movement
+            that consolidated into a single-party state within five years of seizing power. The initial
+            revolution had genuine popular support against Batista's corrupt dictatorship; the authoritarian
+            consolidation was rapid (1959–1961) and used a combination of legal nationalization, political
+            purges, and a genuine external threat (Bay of Pigs, US economic embargo) to justify emergency
+            measures that became permanent. By 1965 the single-party structure was institutionalized.
+            Included because the media control mechanisms (Law 1180) and political trial mechanisms are
+            directly referenced in the propaganda tracker.
+          </p>
+        </div>
+        <div class="comp-meta">
+          <div class="comp-meta-row"><div class="comp-meta-label">Type</div><div class="comp-meta-val">Revolutionary consolidation into single-party state</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Start</div><div class="comp-meta-val">January 1, 1959 (revolution succeeds)</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Phase now</div><div class="comp-meta-val phase3">Phase 3 — Institutionalized single-party state</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Key feature</div><div class="comp-meta-val">Legal nationalization eliminated independent press and business in 2 years</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Outcome</div><div class="comp-meta-val">Single-party rule continues under Miguel Díaz-Canel (2021–present)</div></div>
+        </div>
+      </div>
+
+      <div class="comp-phases">
+        <div class="comp-phase-card p1">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 1 — Preconditions</div>
+            <div class="comp-phase-title">Structural vulnerabilities</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">1952–1958:</span> Batista dictatorship delegitimizes existing political class; US support for Batista delegitimizes US-aligned opposition</div>
+              <div class="comp-phase-event"><span class="comp-year">Structural:</span> High inequality; US corporate landownership; rural peasantry with legitimate economic grievances</div>
+              <div class="comp-phase-event"><span class="comp-year">Structural:</span> Absence of strong independent civil institutions; Catholic Church was the primary non-state organization</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-phase-card p2">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 2 — Emergence</div>
+            <div class="comp-phase-title">Mechanism deployment</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">1959:</span> Revolutionary Tribunals established; 500+ Batista officials executed after summary trials</div>
+              <div class="comp-phase-event"><span class="comp-year">1959–1960:</span> Land reform law nationalizes large farms; US companies' properties seized</div>
+              <div class="comp-phase-event"><span class="comp-year">1960:</span> Law 1180 nationalizes all private media; independent press eliminated through property law</div>
+              <div class="comp-phase-event"><span class="comp-year">1960:</span> Committees for the Defense of the Revolution (CDRs) established as neighborhood surveillance network</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-phase-card p3">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 3 — Consolidation</div>
+            <div class="comp-phase-title">Entrenchment</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">1961:</span> Bay of Pigs invasion used to justify mass arrests of suspected opponents (35,000 detained)</div>
+              <div class="comp-phase-event"><span class="comp-year">1961:</span> Cuba declared "socialist state"; Revolutionary Government fused with Communist Party</div>
+              <div class="comp-phase-event"><span class="comp-year">1962:</span> US embargo begins; external threat provides ongoing consolidation justification</div>
+              <div class="comp-phase-event"><span class="comp-year">1965:</span> United Party of the Socialist Revolution formalized as single party; institutionalization complete</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-bottom">
+        <div class="comp-resistance">
+          <div class="comp-block-label">Resistance &amp; countervailing forces</div>
+          <div class="comp-block-body">Bay of Pigs invasion (CIA-backed, April 1961) failed and was counterproductive — consolidating Cuban nationalism around the revolution and giving Castro grounds for mass arrests of suspected collaborators. Catholic Church maintained some autonomy until 1961 when it was suppressed and foreign clergy expelled. Mass emigration to Miami created an external opposition community (eventually 2M+ Cuban Americans) that maintained cultural resistance but could not reverse consolidation from outside. Underground resistance (plantados) existed in prisons but was effectively suppressed.</div>
+        </div>
+        <div class="comp-outcome">
+          <div class="comp-block-label">Outcome &amp; current status</div>
+          <div class="comp-outcome-status" style="background:rgba(192,57,43,0.15);color:#c0392b;border:1px solid rgba(192,57,43,0.3)">Single-party state (65+ years)</div>
+          <div class="comp-block-body">Cuba remains a single-party state. The 2021 protests (11J) were the largest since 1959 and were suppressed through mass arrests (1,400+ detained). Key lesson for mechanism analysis: Law 1180 (media nationalization through property law) is the historical reference for "legal censorship" — it demonstrates that existing legal mechanisms (property law, not censorship law) can achieve censorship outcomes without explicit constitutional challenge.</div>
+        </div>
+      </div>
+
+      <div class="cp-us-note">
+        <strong>US comparison note:</strong> The Cuba case is the most structurally dissimilar: revolutionary rather than democratic origin, 1959 political context, and single-party outcome not currently relevant. The specific mechanisms referenced in this site's propaganda tracker are: CDR neighborhood surveillance (parallel to CISA social media monitoring), Law 1180 media nationalization (parallel to FCC license revocation as censorship without censorship statute), and Revolutionary Tribunals (parallel to military commissions used for civilians). These mechanism parallels are analytical, not outcome predictions.
+      </div>
+    </div>
+
+
+    <!-- ─── MAO / CHINA ─────────────────────────────────────── -->
+    <div class="comp-profile" id="profile-mao">
+
+      <div class="comp-profile-header">
+        <div>
+          <div class="comp-name">Mao Zedong &nbsp;/&nbsp; China</div>
+          <div class="comp-subtitle">Revolutionary consolidation + mass campaign authoritarianism &nbsp;·&nbsp; 1949–1976</div>
+          <p class="comp-desc">
+            The Mao case is included as the most extreme historical reference for mechanisms tracked on
+            this site: Anti-Rightist Campaign (persecution of scientists and intellectuals), Great Leap
+            Forward (state-enforced pseudoscience overriding expert consensus), Cultural Revolution
+            (mass mobilization against "enemies"), and the People's Daily information monopoly
+            (manufactured consent at scale). These are historical reference points for mechanism
+            definitions — the current US cases are documented as structural parallels in mechanism,
+            not equivalent in scale or trajectory.
+          </p>
+        </div>
+        <div class="comp-meta">
+          <div class="comp-meta-row"><div class="comp-meta-label">Type</div><div class="comp-meta-val">Revolutionary mass campaign authoritarianism</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Start</div><div class="comp-meta-val">October 1, 1949 (PRC founded)</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Phase</div><div class="comp-meta-val phase3">Continued under Xi Jinping (different mechanism set)</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Key feature</div><div class="comp-meta-val">Mass political campaigns replaced institutional mechanisms as enforcement tool</div></div>
+          <div class="comp-meta-row"><div class="comp-meta-label">Outcome</div><div class="comp-meta-val">PRC persists as single-party state; Xi era represents distinct consolidation phase</div></div>
+        </div>
+      </div>
+
+      <div class="comp-phases">
+        <div class="comp-phase-card p1">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 1 — Preconditions</div>
+            <div class="comp-phase-title">Structural vulnerabilities</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">1839–1949:</span> "Century of humiliation" — colonial exploitation, warlordism, Japanese occupation create genuine national grievance that CCP channels</div>
+              <div class="comp-phase-event"><span class="comp-year">Structural:</span> 80% rural peasant population with acute land inequality; landlord class provided scapegoat target</div>
+              <div class="comp-phase-event"><span class="comp-year">Structural:</span> Nationalist government (KMT) corruption and incompetence delegitimized democratic alternative</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-phase-card p2">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 2 — Emergence</div>
+            <div class="comp-phase-title">Mechanism deployment</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">1950–1953:</span> Land reform campaigns; landlord class eliminated through mass trials and executions (500K–2M killed)</div>
+              <div class="comp-phase-event"><span class="comp-year">1956–1957:</span> Hundred Flowers campaign invites criticism; critics are then labeled "rightists"</div>
+              <div class="comp-phase-event"><span class="comp-year">1957–1959:</span> Anti-Rightist Campaign; 550,000 intellectuals, scientists, and academics purged</div>
+              <div class="comp-phase-event"><span class="comp-year">1958–1962:</span> Great Leap Forward; state-mandated pseudoscience (Lysenkoism); 15–55M famine deaths</div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-phase-card p3">
+          <div class="comp-phase-header">
+            <div class="comp-phase-num">Phase 3 — Consolidation</div>
+            <div class="comp-phase-title">Entrenchment</div>
+          </div>
+          <div class="comp-phase-body">
+            <div class="comp-phase-events">
+              <div class="comp-phase-event"><span class="comp-year">1966–1976:</span> Cultural Revolution; Red Guards mobilized against "Four Olds"; 1–2M killed, 16M sent to countryside</div>
+              <div class="comp-phase-event"><span class="comp-year">Throughout:</span> People's Daily and Xinhua as exclusive state information channels; famine data omitted from public record</div>
+              <div class="comp-phase-event"><span class="comp-year">Throughout:</span> "Struggle sessions" (批斗会) as mechanism of public humiliation and forced confession</div>
+              <div class="comp-phase-event"><span class="comp-year">1976:</span> Mao's death ends Cultural Revolution; Deng's reforms begin dismantling mass campaign model</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comp-bottom">
+        <div class="comp-resistance">
+          <div class="comp-block-label">Resistance &amp; countervailing forces</div>
+          <div class="comp-block-body">Internal party resistance existed but was systematically eliminated: Liu Shaoqi (head of state) and Deng Xiaoping were purged during the Cultural Revolution. Marshal Peng Dehuai was purged after privately criticizing the Great Leap Forward famine. Resistance was primarily internal elite resistance (party factions) rather than civil society resistance; organized civil society did not exist independently. Post-Mao reform was led by party insiders (Deng) who had survived purges, not external opposition.</div>
+        </div>
+        <div class="comp-outcome">
+          <div class="comp-block-label">Outcome &amp; current status</div>
+          <div class="comp-outcome-status" style="background:rgba(192,57,43,0.15);color:#c0392b;border:1px solid rgba(192,57,43,0.3)">Single-party state (75+ years)</div>
+          <div class="comp-block-body">PRC continues as single-party state. Post-Mao China represents an important case of internal reform without democratization: economic opening without political liberalization. Xi Jinping (2012–present) has reversed some Deng-era institutional limits (term limits removed, cult of personality restored). Key lesson for mechanism analysis: mass political campaigns, where the population is mobilized against internal enemies, are a qualitatively different and more dangerous mechanism than institutional manipulation — they create distributed enforcement that is harder to reverse.</div>
+        </div>
+      </div>
+
+      <div class="cp-us-note">
+        <strong>US comparison note:</strong> The Mao case is the most structurally dissimilar to the US context. It is included because specific mechanisms — the Anti-Rightist Campaign (scientific persecution), People's Daily information monopoly (manufactured consent), and struggle session rhetoric (public enemy framing) — are explicitly referenced as historical parallels in this site's propaganda and environment trackers. The references are to mechanism type, not to predicted outcome or equivalent scale.
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       COMPARISON TABLE
+       ══════════════════════════════════════════════════════════ -->
+  <section class="cp-section" style="margin-bottom:3rem">
+    <div class="cp-section-head">
+      <p class="section-label">Section 2 — Cross-case mechanism comparison</p>
+    </div>
+
+    <div class="comp-table-wrap">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Mechanism</th>
+            <th>Hungary / Orbán</th>
+            <th>Turkey / Erdoğan</th>
+            <th>Venezuela / Chávez</th>
+            <th>Cuba / Castro</th>
+            <th>China / Mao</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Judiciary restructuring</td>
+            <td class="yes">Yes — lowered retirement age, court packing</td>
+            <td class="yes">Yes — post-2016 purge of 4,000 judges</td>
+            <td class="yes">Yes — Supreme Court expanded, packed</td>
+            <td class="yes">Yes — Revolutionary Tribunals replaced courts</td>
+            <td class="yes">Yes — party above all institutions</td>
+          </tr>
+          <tr>
+            <td>Media control</td>
+            <td class="yes">Yes — state merger of public media; private capture</td>
+            <td class="yes">Yes — 150+ journalists imprisoned; outlets seized</td>
+            <td class="yes">Yes — CONATEL license revocations; intimidation</td>
+            <td class="yes">Yes — Law 1180 nationalization (legal mechanism)</td>
+            <td class="yes">Yes — People's Daily / Xinhua monopoly</td>
+          </tr>
+          <tr>
+            <td>Scapegoating / enemy framing</td>
+            <td class="yes">Yes — "Soros Plan"; migrants as national threat</td>
+            <td class="yes">Yes — Kurds, Gülenists labeled "terrorists"</td>
+            <td class="yes">Yes — oligarchy, "empire" (US), opposition elites</td>
+            <td class="yes">Yes — "imperialist lackeys"; counterrevolutionaries</td>
+            <td class="yes">Yes — landlords, rightists, class enemies</td>
+          </tr>
+          <tr>
+            <td>Electoral manipulation</td>
+            <td class="yes">Yes — gerrymandering, diaspora votes, media advantage</td>
+            <td class="yes">Yes — unequal media access; 2019 result overturned</td>
+            <td class="yes">Yes — opposition boycott; 2017 constituent assembly</td>
+            <td class="no">N/A — single party; elections not competitive</td>
+            <td class="no">N/A — no competitive elections</td>
+          </tr>
+          <tr>
+            <td>Surveillance / control infrastructure</td>
+            <td class="partial">Partial — commercial surveillance; media monitoring</td>
+            <td class="yes">Yes — MİT expansion; social media blocking</td>
+            <td class="partial">Partial — colectivos as informal enforcement</td>
+            <td class="yes">Yes — CDR neighborhood committees (1960)</td>
+            <td class="yes">Yes — danwei work unit surveillance; later social credit</td>
+          </tr>
+          <tr>
+            <td>Scientific institution suppression</td>
+            <td class="yes">Yes — Academy of Sciences placed under ministry (2019)</td>
+            <td class="partial">Partial — universities targeted; academics arrested</td>
+            <td class="partial">Partial — PDVSA technical staff purged</td>
+            <td class="partial">Partial — some academic freedom maintained</td>
+            <td class="yes">Yes — Anti-Rightist Campaign; Lysenkoism</td>
+          </tr>
+          <tr>
+            <td>Consolidated from democratic start</td>
+            <td class="yes">Yes</td>
+            <td class="yes">Yes</td>
+            <td class="yes">Yes</td>
+            <td class="no">No — replaced dictatorship</td>
+            <td class="no">No — civil war / revolution</td>
+          </tr>
+          <tr>
+            <td>Reversed / ended</td>
+            <td class="no">No — ongoing</td>
+            <td class="no">No — ongoing</td>
+            <td class="no">No — deepened under Maduro</td>
+            <td class="no">No — 65+ years</td>
+            <td class="no">No — reformed but not reversed</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <footer>
+    Framework informed by Levitsky &amp; Ziblatt, V-Dem, Freedom House, Polity5. &nbsp;·&nbsp;
+    Every indicator is <a href="#">defined and sourced</a>. &nbsp;·&nbsp;
+    Analysis, not advocacy.
+  </footer>
+
+
+  <script>
+  // ── COMPARATOR TAB SWITCHING ──────────────────────────────────────────────────
+  const tabs     = document.querySelectorAll('.comp-tab');
+  const profiles = document.querySelectorAll('.comp-profile');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      profiles.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('profile-' + tab.dataset.comp).classList.add('active');
+    });
+  });
+  </script>
+
+</body>
+</html>

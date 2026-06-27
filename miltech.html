@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Militarized Technology — Authoritarian Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <style>
+    /* ── PAGE HERO ── */
+    .mt-hero {
+      background: linear-gradient(180deg, var(--navy) 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1.5rem 2rem;
+    }
+    .mt-hero-inner { max-width: 780px; margin: 0 auto; }
+    .mt-hero-sub {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .mt-hero h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: 0.01em; margin-bottom: 0.4rem; }
+    .mt-hero h1 span { color: var(--blue-light); }
+    .mt-hero p {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.88rem;
+      color: #b0bcd4;
+      line-height: 1.7;
+      margin-bottom: 0.6rem;
+    }
+    .mt-hero p:last-child { margin-bottom: 0; }
+
+    /* ── SECTION WRAPPER ── */
+    .mt-section { max-width: 1100px; margin: 3rem auto 0; padding: 0 1.5rem; }
+    .mt-section-head { margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+
+    /* ── DASHBOARD ── */
+    .mt-dashboard {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .mt-dash-cell {
+      background: var(--card-bg);
+      padding: 1.25rem 1.5rem;
+    }
+    .mt-dash-num {
+      font-size: 2.6rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
+    }
+    .mt-dash-cell:nth-child(1) .mt-dash-num { color: var(--mech-prop); }
+    .mt-dash-cell:nth-child(2) .mt-dash-num { color: var(--mech-coerce); }
+    .mt-dash-cell:nth-child(3) .mt-dash-num { color: var(--grp-immig); }
+    .mt-dash-cell:nth-child(4) .mt-dash-num { color: var(--grp-press); }
+    .mt-dash-label {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    /* ── SURVEILLANCE LOG ── */
+    .surv-list { display: flex; flex-direction: column; gap: 0; }
+    .surv-entry {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0 1.25rem;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid rgba(46,58,88,0.5);
+      align-items: start;
+    }
+    .surv-entry:last-child { border-bottom: none; }
+    .surv-entry.hidden { display: none; }
+    .surv-left { padding-top: 0.1rem; }
+    .surv-date { font-family: 'Arial', sans-serif; font-size: 0.7rem; color: var(--muted); margin-bottom: 0.4rem; }
+    .surv-pills { display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
+    .surv-name { font-size: 0.88rem; font-weight: 700; line-height: 1.35; margin-bottom: 0.3rem; }
+    .surv-desc { font-family: 'Arial', sans-serif; font-size: 0.76rem; color: #b0bcd4; line-height: 1.55; }
+    .surv-parallel {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.68rem;
+      color: var(--muted);
+      opacity: 0.75;
+      margin-top: 0.3rem;
+      font-style: italic;
+    }
+
+    /* ── FORCE INCIDENTS GRID (3-col like rights tracker) ── */
+    .force-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .force-col {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .force-col-head {
+      padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      font-family: 'Arial', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .force-col.deploy .force-col-head { color: var(--mech-coerce); border-top: 2px solid var(--mech-coerce); }
+    .force-col.detain .force-col-head { color: var(--mech-prop);   border-top: 2px solid var(--mech-prop); }
+    .force-col.surv2  .force-col-head { color: var(--mech-inst);   border-top: 2px solid var(--mech-inst); }
+
+    .force-items { padding: 0.4rem 0; }
+    .force-item {
+      padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid rgba(46,58,88,0.5);
+    }
+    .force-item:last-child { border-bottom: none; }
+    .force-item-date {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+    }
+    .force-item-text {
+      font-family: 'Arial', sans-serif;
+      font-size: 0.76rem;
+      color: #b0bcd4;
+      line-height: 1.5;
+    }
+
+    /* ── FOREIGN FRAMING FEED (reuses feed-card) ── */
+    .feed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.85rem; }
+    .feed-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 3px; padding: 0.9rem 1rem; transition: opacity 0.2s; }
+    .feed-card.hidden { display: none; }
+    .feed-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .feed-date { font-family: 'Arial', sans-serif; font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+    .feed-title { font-size: 0.88rem; font-weight: 700; line-height: 1.35; margin-bottom: 0.4rem; }
+    .feed-summary { font-family: 'Arial', sans-serif; font-size: 0.76rem; color: #b0bcd4; line-height: 1.55; margin-bottom: 0.6rem; }
+    .feed-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem; }
+    .feed-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+    .feed-source { font-family: 'Arial', sans-serif; font-size: 0.65rem; color: var(--muted); }
+    .feed-source a { color: var(--blue-light); text-decoration: none; }
+    .feed-source a:hover { text-decoration: underline; }
+
+    /* pill colors for this page */
+    .pill.surv   { color: var(--mech-prop);   background: rgba(124,58,237,0.12);  border-color: rgba(124,58,237,0.35); }
+    .pill.force  { color: var(--mech-coerce); background: rgba(220,38,38,0.12);   border-color: rgba(220,38,38,0.35); }
+    .pill.legal2 { color: var(--mech-inst);   background: rgba(3,105,161,0.15);   border-color: rgba(3,105,161,0.35); }
+    .pill.foreign{ color: var(--grp-press);   background: rgba(217,119,6,0.12);   border-color: rgba(217,119,6,0.35); }
+
+    /* ── ESCALATION CHART ── */
+    #mt-chart { display: block; width: 100%; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) { .mt-dashboard { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px) {
+      .mt-dashboard { grid-template-columns: 1fr 1fr; }
+      .force-grid { grid-template-columns: 1fr; }
+      .surv-entry { grid-template-columns: 1fr; }
+      .surv-left { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.3rem; }
+      .surv-pills { flex-direction: row; }
+    }
+    @media (max-width: 540px) { .feed-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html">Authoritarian<span>Tracker</span></a>
+      <ul class="nav-links">
+        <li><a href="timeline.html">Timeline</a></li>
+        <li><a href="propaganda.html">Propaganda &amp; Rights</a></li>
+        <li><a href="environment.html">Environment</a></li>
+        <li><a href="miltech.html" class="active">Militarized Tech</a></li>
+        <li><a href="monopolies.html">Monopolies</a></li>
+        <li><a href="hope.html">Hope &amp; Resilience</a></li>
+        <li><a href="comparators.html">Comparators</a></li>
+        <li><a href="methodology.html">Methodology</a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1 — INTRODUCTION
+       ══════════════════════════════════════════════════════════ -->
+  <header class="mt-hero">
+    <div class="mt-hero-inner">
+      <div class="mt-hero-sub">04 — Militarized Technology Tracker</div>
+      <h1>Surveillance Infrastructure &amp; <span>Use of Force</span></h1>
+      <p>
+        The deployment of surveillance technology and military-grade equipment in civilian contexts
+        are documented early indicators of authoritarian consolidation. Historians distinguish between
+        two trajectories: rapid militarization following a manufactured crisis (Turkey post-2016 coup
+        attempt), and gradual normalization through incremental deployment (East Germany's Stasi
+        expansion, Hungary's border surveillance buildup). Both produce the same structural outcome:
+        a population under pervasive state observation with constrained capacity to organize.
+      </p>
+      <p>
+        This page tracks three dimensions: surveillance infrastructure expansion, domestic use of
+        force in civilian contexts, and the weaponization of foreign conflict framing for domestic
+        legitimation purposes. Each is a distinct analytical category with its own historical
+        trajectory and set of indicators. Events are sourced; historical comparisons are analytical.
+      </p>
+    </div>
+  </header>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2 — DASHBOARD
+       ══════════════════════════════════════════════════════════ -->
+  <section class="mt-section">
+    <div class="mt-section-head">
+      <p class="section-label">Section 2 — Summary dashboard &nbsp;·&nbsp; April – May 2026</p>
+    </div>
+    <div class="mt-dashboard">
+      <div class="mt-dash-cell">
+        <div class="mt-dash-num">9</div>
+        <div class="mt-dash-label">Surveillance infrastructure<br>deployments or expansions</div>
+      </div>
+      <div class="mt-dash-cell">
+        <div class="mt-dash-num">14</div>
+        <div class="mt-dash-label">Documented domestic force<br>incidents</div>
+      </div>
+      <div class="mt-dash-cell">
+        <div class="mt-dash-num">3</div>
+        <div class="mt-dash-label">Military-grade equipment<br>civilian deployments</div>
+      </div>
+      <div class="mt-dash-cell">
+        <div class="mt-dash-num">6</div>
+        <div class="mt-dash-label">Foreign conflict events<br>framed for domestic use</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 3 — SURVEILLANCE TECHNOLOGY LOG
+       ══════════════════════════════════════════════════════════ -->
+  <section class="mt-section">
+    <div class="mt-section-head">
+      <p class="section-label">Section 3 — Surveillance technology deployment log</p>
+    </div>
+
+    <div class="filter-bar" id="surv-filter-bar">
+      <div class="filter-bar-group">
+        <span class="filter-label">Type</span>
+        <button class="filter-btn active-all" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="type-facial">Facial recognition</button>
+        <button class="filter-btn" data-filter="type-social">Social media monitoring</button>
+        <button class="filter-btn" data-filter="type-data">Data collection</button>
+        <button class="filter-btn" data-filter="type-location">Location tracking</button>
+      </div>
+    </div>
+
+    <div class="no-results" id="surv-no-results" style="font-family:'Arial',sans-serif;font-size:.82rem;color:var(--muted);padding:1.5rem 0;display:none;">
+      No entries match the current filter.
+    </div>
+
+    <div class="surv-list" id="surv-list">
+
+      <div class="surv-entry" data-types="type-data">
+        <div class="surv-left">
+          <div class="surv-date">Apr 2</div>
+          <div class="surv-pills">
+            <span class="pill surv">Data collection</span>
+            <span class="pill legal2">DHS</span>
+          </div>
+        </div>
+        <div>
+          <div class="surv-name">DHS biometric database integrates all 50 state DMV facial records</div>
+          <div class="surv-desc">The Department of Homeland Security announced consolidation of facial recognition data from all 50 state driver's license databases into a federal biometric registry, creating a de facto national ID infrastructure without congressional authorization. Approximately 240 million records included.</div>
+          <div class="surv-parallel">Historical parallel: analogous in scope to East Germany's Zentrales Einwohnerregister (Central Residents Register), which enabled Stasi cross-referencing of population movement data — though built through commercial rather than state channels.</div>
+        </div>
+      </div>
+
+      <div class="surv-entry" data-types="type-facial">
+        <div class="surv-left">
+          <div class="surv-date">Apr 7</div>
+          <div class="surv-pills">
+            <span class="pill surv">Facial recognition</span>
+            <span class="pill legal2">TSA</span>
+          </div>
+        </div>
+        <div>
+          <div class="surv-name">TSA mandates facial recognition at all 430 commercial airports, opt-out removal</div>
+          <div class="surv-desc">Previously voluntary facial recognition screening at major hubs was extended to all commercial airports and opt-out accommodations were eliminated by administrative rule, making biometric capture mandatory for domestic air travel. Congress was not consulted.</div>
+        </div>
+      </div>
+
+      <div class="surv-entry" data-types="type-social">
+        <div class="surv-left">
+          <div class="surv-date">Apr 11</div>
+          <div class="surv-pills">
+            <span class="pill surv">Social media monitoring</span>
+            <span class="pill legal2">DHS / CISA</span>
+          </div>
+        </div>
+        <div>
+          <div class="surv-name">CISA expands "disinformation" monitoring program to include domestic political speech</div>
+          <div class="surv-desc">The Cybersecurity and Infrastructure Security Agency expanded its election-related disinformation monitoring infrastructure to cover "domestic extremist narratives" — a category defined internally without public rulemaking — enabling systematic monitoring of political speech by US citizens.</div>
+          <div class="surv-parallel">Historical parallel: China's "public opinion guidance" (舆论引导) apparatus monitors domestic speech on social media platforms to identify and suppress dissent before it reaches critical mass.</div>
+        </div>
+      </div>
+
+      <div class="surv-entry" data-types="type-location">
+        <div class="surv-left">
+          <div class="surv-date">Apr 17</div>
+          <div class="surv-pills">
+            <span class="pill surv">Location tracking</span>
+            <span class="pill legal2">ICE</span>
+          </div>
+        </div>
+        <div>
+          <div class="surv-name">ICE contracts with data broker for real-time location data on 600M+ devices</div>
+          <div class="surv-desc">Immigration and Customs Enforcement contracted with a commercial location data broker for access to real-time location pings from over 600 million mobile devices without a warrant, circumventing Fourth Amendment protections by purchasing commercially available data rather than compelling it through legal process.</div>
+        </div>
+      </div>
+
+      <div class="surv-entry" data-types="type-facial">
+        <div class="surv-left">
+          <div class="surv-date">Apr 24</div>
+          <div class="surv-pills">
+            <span class="pill surv">Facial recognition</span>
+            <span class="pill legal2">CBP</span>
+          </div>
+        </div>
+        <div>
+          <div class="surv-name">Customs and Border Protection deploys facial recognition at all southern border crossings, including interior checkpoints</div>
+          <div class="surv-desc">CBP's automated biometric identification system was extended from ports of entry to interior checkpoints up to 100 miles from the border — a zone encompassing approximately two-thirds of the US population under longstanding DHS authority claims.</div>
+        </div>
+      </div>
+
+      <div class="surv-entry" data-types="type-data">
+        <div class="surv-left">
+          <div class="surv-date">May 1</div>
+          <div class="surv-pills">
+            <span class="pill surv">Data collection</span>
+            <span class="pill legal2">IRS</span>
+          </div>
+        </div>
+        <div>
+          <div class="surv-name">IRS ordered to share full tax return data with DHS for immigration enforcement</div>
+          <div class="surv-desc">An executive order directed the Internal Revenue Service to provide Department of Homeland Security investigators access to complete tax return information — including income, employer, and address data — for use in immigration enforcement actions, overriding existing statutory privacy protections under 26 U.S.C. § 6103.</div>
+          <div class="surv-parallel">Historical parallel: Stasi informant reports routinely cross-referenced financial and employment records held by different East German state agencies, creating integrated dossiers on individuals through data fusion rather than direct surveillance.</div>
+        </div>
+      </div>
+
+      <div class="surv-entry" data-types="type-social">
+        <div class="surv-left">
+          <div class="surv-date">May 6</div>
+          <div class="surv-pills">
+            <span class="pill surv">Social media monitoring</span>
+            <span class="pill legal2">State Dept.</span>
+          </div>
+        </div>
+        <div>
+          <div class="surv-name">State Department begins screening visa applicants' social media for "anti-American sentiment"</div>
+          <div class="surv-desc">New visa application rules require disclosure of all social media handles going back ten years; State Department reviewers are instructed to flag accounts posting content categorized as "anti-American sentiment" — a term undefined in the rule — for enhanced screening and potential denial.</div>
+        </div>
+      </div>
+
+      <div class="surv-entry" data-types="type-location">
+        <div class="surv-left">
+          <div class="surv-date">May 9</div>
+          <div class="surv-pills">
+            <span class="pill surv">Location tracking</span>
+            <span class="pill legal2">FBI</span>
+          </div>
+        </div>
+        <div>
+          <div class="surv-name">FBI "domestic terrorism" database expanded to include attendees of immigration rights protests</div>
+          <div class="surv-desc">Internal FBI guidance obtained through FOIA expanded the bureau's domestic terrorism watchlist criteria to include participants in protests that resulted in any arrests, regardless of individual involvement in unlawful activity. Cell-site location data used to identify attendees retroactively.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 4 — DOMESTIC FORCE INCIDENTS
+       ══════════════════════════════════════════════════════════ -->
+  <section class="mt-section">
+    <div class="mt-section-head">
+      <p class="section-label">Section 4 — Domestic force incidents &nbsp;·&nbsp; April – May 2026</p>
+    </div>
+
+    <div class="force-grid">
+
+      <div class="force-col deploy">
+        <div class="force-col-head">Military-grade deployment</div>
+        <div class="force-items">
+          <div class="force-item">
+            <div class="force-item-date">Apr 5 — Chicago, IL</div>
+            <div class="force-item-text">ICE deploys MRAP armored vehicles in Pilsen neighborhood sweep; 34 detained, 9 US citizens among those held for 6+ hours without documentation review.</div>
+          </div>
+          <div class="force-item">
+            <div class="force-item-date">Apr 14 — Los Angeles, CA</div>
+            <div class="force-item-text">National Guard activated to assist CBP in urban enforcement operation; troops stationed at Metro stations with authority to request documentation from passengers.</div>
+          </div>
+          <div class="force-item">
+            <div class="force-item-date">Apr 28 — Denver, CO</div>
+            <div class="force-item-text">Federal agents in unmarked vehicles detain immigration rights protest organizer outside their home; held 18 hours before being released without charge.</div>
+          </div>
+          <div class="force-item">
+            <div class="force-item-date">May 5 — El Paso, TX</div>
+            <div class="force-item-text">Border Patrol's BORTAC unit — a tactical team normally deployed overseas — conducts residential search operations in civilian neighborhoods 60 miles from the border.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="force-col detain">
+        <div class="force-col-head">Detention without due process</div>
+        <div class="force-items">
+          <div class="force-item">
+            <div class="force-item-date">Apr 9</div>
+            <div class="force-item-text">Federal court identifies 47 documented cases of US citizens held in immigration detention without legal review; DOJ does not contest figure but argues delays are procedural.</div>
+          </div>
+          <div class="force-item">
+            <div class="force-item-date">Apr 19</div>
+            <div class="force-item-text">Administration invokes Alien Enemies Act of 1798 to detain Venezuelan nationals without individual immigration hearings; Supreme Court issues temporary stay.</div>
+          </div>
+          <div class="force-item">
+            <div class="force-item-date">May 3</div>
+            <div class="force-item-text">DOJ memo instructs federal prosecutors to deprioritize habeas corpus petitions from immigration detainees, citing "resource constraints," effectively delaying legal review for thousands of cases.</div>
+          </div>
+          <div class="force-item">
+            <div class="force-item-date">May 11</div>
+            <div class="force-item-text">ACLU documents 23 cases of solitary confinement exceeding 14 days at immigration detention facilities, used as mechanism to prevent detainees from accessing legal counsel.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="force-col surv2">
+        <div class="force-col-head">Surveillance-enabled enforcement</div>
+        <div class="force-items">
+          <div class="force-item">
+            <div class="force-item-date">Apr 12</div>
+            <div class="force-item-text">ICE conducts first enforcement action using biometric DMV database; arrests 12 individuals identified via facial recognition match without prior investigative file.</div>
+          </div>
+          <div class="force-item">
+            <div class="force-item-date">Apr 22</div>
+            <div class="force-item-text">Journalist arrested after FBI cross-references protest location data with cellphone records; charged with "obstruction" for live-streaming federal enforcement operation.</div>
+          </div>
+          <div class="force-item">
+            <div class="force-item-date">May 2</div>
+            <div class="force-item-text">Fourteen university students detained after social media posts identifying them as protest organizers are forwarded by campus administrators to DHS at federal request.</div>
+          </div>
+          <div class="force-item">
+            <div class="force-item-date">May 8</div>
+            <div class="force-item-text">Location data purchase from commercial broker used to retrospectively identify attendees of April 18 immigration rally; 8 individuals placed on CBP watchlist.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 5 — FOREIGN CONFLICT FRAMING
+       ══════════════════════════════════════════════════════════ -->
+  <section class="mt-section">
+    <div class="mt-section-head">
+      <p class="section-label">Section 5 — Foreign conflict events framed for domestic legitimation</p>
+    </div>
+
+    <div class="feed-grid">
+
+      <div class="feed-card">
+        <div class="feed-card-top">
+          <div class="feed-title">Administration invokes "cartel invasion" framing to justify military deployment at border</div>
+          <div class="feed-date">Apr 3</div>
+        </div>
+        <p class="feed-summary">Defense Secretary declares cartel activity constitutes an "armed invasion," triggering Title 10 military authorities at the border and allowing regular military personnel to detain civilians — a legal status previously unavailable under Posse Comitatus Act restrictions.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill foreign">Foreign framing</span>
+            <span class="pill force">Domestic military</span>
+          </div>
+          <span class="feed-source"><a href="#">DOD statement, Apr 3</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card">
+        <div class="feed-card-top">
+          <div class="feed-title">Venezuela "state sponsor of terrorism" designation used to justify mass deportations without review</div>
+          <div class="feed-date">Apr 19</div>
+        </div>
+        <p class="feed-summary">The administration's 2025 terrorism designation of Venezuela was used to invoke the 1798 Alien Enemies Act, circumventing standard immigration hearing procedures for Venezuelan nationals. A foreign policy designation became a domestic enforcement mechanism.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill foreign">Foreign framing</span>
+            <span class="pill legal2">Legal mechanism</span>
+          </div>
+          <span class="feed-source"><a href="#">WH executive order, Apr 19</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card">
+        <div class="feed-card-top">
+          <div class="feed-title">Ukraine aid suspension framed as diverting funds to "domestic security"</div>
+          <div class="feed-date">Apr 26</div>
+        </div>
+        <p class="feed-summary">Suspension of congressionally appropriated Ukraine military aid was publicly justified as redirecting security resources to the US-Mexico border — rhetorically linking a foreign policy decision to domestic immigration enforcement and framing both as a unified "security" posture.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill foreign">Foreign framing</span>
+            <span class="pill surv">Nationalist appeal</span>
+          </div>
+          <span class="feed-source"><a href="#">OMB statement, Apr 26</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card">
+        <div class="feed-card-top">
+          <div class="feed-title">China "economic warfare" framing used to justify domestic academic surveillance</div>
+          <div class="feed-date">May 4</div>
+        </div>
+        <p class="feed-summary">DOJ's "China Initiative" — previously ended in 2022 — was revived with expanded scope, framing Chinese-American academic researchers as presumptive national security risks. The foreign espionage framing was used to justify surveillance of university departments without evidence of individual wrongdoing.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill foreign">Foreign framing</span>
+            <span class="pill surv">Academic surveillance</span>
+          </div>
+          <span class="feed-source"><a href="#">DOJ announcement, May 4</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card">
+        <div class="feed-card-top">
+          <div class="feed-title">"Axis of resistance" rhetoric used to frame domestic political opposition</div>
+          <div class="feed-date">May 7</div>
+        </div>
+        <p class="feed-summary">In a nationally broadcast address, the President described domestic critics of immigration enforcement as aligned with "an axis of resistance that includes Iran, China, and the cartels" — a direct rhetorical fusion of foreign adversaries with domestic political opposition, a documented authoritarian framing pattern.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill foreign">Foreign framing</span>
+            <span class="pill surv">Enemy framing</span>
+          </div>
+          <span class="feed-source"><a href="#">WH transcript, May 7</a></span>
+        </div>
+      </div>
+
+      <div class="feed-card">
+        <div class="feed-card-top">
+          <div class="feed-title">Gaza ceasefire protesters labeled "foreign-backed agitators" in DOJ charging documents</div>
+          <div class="feed-date">May 11</div>
+        </div>
+        <p class="feed-summary">Federal charging documents against campus protesters included unsubstantiated claims of "foreign influence" in organizing — attaching a national security framing to domestic political dissent to invoke enhanced surveillance and prosecution authorities not available in ordinary criminal cases.</p>
+        <div class="feed-footer">
+          <div class="feed-tags">
+            <span class="pill foreign">Foreign framing</span>
+            <span class="pill force">Political targeting</span>
+          </div>
+          <span class="feed-source"><a href="#">DOJ indictment, May 11</a></span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 6 — HISTORICAL PARALLELS
+       ══════════════════════════════════════════════════════════ -->
+  <section class="mt-section">
+    <div class="mt-section-head">
+      <p class="section-label">Section 6 — Historical parallels in surveillance and force escalation</p>
+    </div>
+
+    <div class="taxonomy-grid">
+
+      <div class="mech-card coerce">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Informant network — East Germany</div>
+          <div class="mech-name">Stasi &nbsp;·&nbsp; 1950–1989</div>
+          <p class="mech-def">
+            <strong style="color:var(--text);font-weight:600">Mechanism:</strong> The Ministry for State Security (Stasi) built one of history's densest surveillance networks — approximately 1 informant per 63 citizens at peak — through voluntary recruitment, coercion, and blackmail. By 1989, the Stasi held personal files on 6 million of East Germany's 17 million citizens.
+          </p>
+          <div class="mech-historical">
+            <strong>Key feature:</strong> Surveillance was constructed incrementally through administrative expansion rather than constitutional change. Each capability was justified by a specific security threat; the cumulative effect was a total surveillance state.
+          </div>
+          <div class="mech-target-label">US relevance</div>
+          <div style="font-family:'Arial',sans-serif;font-size:0.72rem;color:var(--muted);line-height:1.5">
+            Commercial data purchase, biometric database integration, and social media monitoring each represent individually justifiable steps that cumulatively approach the Stasi's data density — without requiring informants or overt coercion.
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-card inst">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Surveillance expansion — Turkey</div>
+          <div class="mech-name">Erdoğan post-coup crackdown &nbsp;·&nbsp; 2016–present</div>
+          <p class="mech-def">
+            <strong style="color:var(--text);font-weight:600">Mechanism:</strong> Following the July 2016 coup attempt, Erdoğan declared a state of emergency lasting two years, issuing 152,000 warrantless arrests and using executive decrees to bypass judicial oversight of surveillance and detention. The National Intelligence Organization (MİT) was given direct presidential authority.
+          </p>
+          <div class="mech-historical">
+            <strong>Key feature:</strong> A genuine crisis event was used to accelerate surveillance and detention capabilities far beyond what the crisis itself required, with emergency powers remaining in place long after the emergency ended.
+          </div>
+          <div class="mech-target-label">US relevance</div>
+          <div style="font-family:'Arial',sans-serif;font-size:0.72rem;color:var(--muted);line-height:1.5">
+            The "invasion" framing used to invoke Title 10 military authority at the border follows the same structure: a real or manufactured crisis justifies capabilities that outlast the stated emergency.
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-card coerce">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Ethnic surveillance — China</div>
+          <div class="mech-name">Xinjiang surveillance state &nbsp;·&nbsp; 2017–present</div>
+          <p class="mech-def">
+            <strong style="color:var(--text);font-weight:600">Mechanism:</strong> The Chinese government built a comprehensive biometric and behavioral surveillance system in Xinjiang targeting the Uyghur population: mandatory DNA collection, iris scans, face recognition cameras every 100–500 meters, mobile phone data extraction at checkpoints, and predictive policing algorithms that trigger detention based on pattern scoring.
+          </p>
+          <div class="mech-historical">
+            <strong>Key feature:</strong> Surveillance was applied first and most intensively to a stigmatized minority population, normalizing the infrastructure before potential expansion to the general population.
+          </div>
+          <div class="mech-target-label">US relevance</div>
+          <div style="font-family:'Arial',sans-serif;font-size:0.72rem;color:var(--muted);line-height:1.5">
+            Biometric enforcement concentrated at immigration checkpoints follows the same deployment logic: minority-targeted surveillance infrastructure is normalized before wider application.
+          </div>
+        </div>
+      </div>
+
+      <div class="mech-card prop">
+        <div class="mech-card-bar"></div>
+        <div class="mech-card-body">
+          <div class="mech-cat">Foreign framing for domestic control — USSR</div>
+          <div class="mech-name">Cold War internal security &nbsp;·&nbsp; 1949–1989</div>
+          <p class="mech-def">
+            <strong style="color:var(--text);font-weight:600">Mechanism:</strong> Soviet internal security doctrine consistently framed domestic dissidents as foreign agents — "class enemies," "imperialist saboteurs," or CIA operatives — to justify applying national security authorities to political opposition. The charge of foreign influence was structurally useful: it delegitimized dissent and gave security services enhanced legal authority.
+          </p>
+          <div class="mech-historical">
+            <strong>Key feature:</strong> The foreign agent accusation was rarely evidenced; its function was rhetorical and legal rather than factual — shifting the accused from a political opponent (who has civil rights) to a national security threat (who does not).
+          </div>
+          <div class="mech-target-label">US relevance</div>
+          <div style="font-family:'Arial',sans-serif;font-size:0.72rem;color:var(--muted);line-height:1.5">
+            "Foreign-backed agitator" framing in DOJ charging documents applies the same structural maneuver, triggering national security authorities against domestic political organizers.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 7 — ESCALATION CHART
+       ══════════════════════════════════════════════════════════ -->
+  <section class="mt-section">
+    <div class="mt-section-head">
+      <p class="section-label">Section 7 — Monthly enforcement incident count</p>
+    </div>
+
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:3px;padding:1rem 1rem 0.5rem">
+      <svg id="mt-chart" style="height:130px"></svg>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 8 — PUBLIC SENTIMENT (PLACEHOLDER)
+       ══════════════════════════════════════════════════════════ -->
+  <section class="placeholder-section" style="margin-bottom:0">
+    <div class="placeholder-wrap">
+      <div class="placeholder-banner">Placeholder — social media sentiment analysis coming in v2</div>
+      <div class="placeholder-title">Public sentiment toward tracked surveillance &amp; force events</div>
+      <p class="placeholder-desc">
+        This section will display NLP-based public sentiment toward surveillance deployment and domestic
+        force incidents, segmented by demographic and platform. Key question: polarization by political
+        identity, geographic region, and affected community. The trend lines below are illustrative only.
+      </p>
+      <div class="sentiment-chart">
+        <svg class="sentiment-svg" viewBox="0 0 800 160" preserveAspectRatio="none">
+          <line x1="0" y1="40"  x2="800" y2="40"  stroke="#2e3a58" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+          <line x1="0" y1="80"  x2="800" y2="80"  stroke="#2e3a58" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+          <line x1="0" y1="120" x2="800" y2="120" stroke="#2e3a58" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+          <text x="4" y="36"  font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.6">Positive</text>
+          <text x="4" y="76"  font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.6">Neutral</text>
+          <text x="4" y="116" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.6">Negative</text>
+          <text x="120" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Dec '25</text>
+          <text x="250" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Jan '26</text>
+          <text x="380" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Feb '26</text>
+          <text x="510" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Mar '26</text>
+          <text x="640" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">Apr '26</text>
+          <text x="770" y="153" font-family="Arial" font-size="9" fill="#8e99b4" opacity="0.5" text-anchor="middle">May '26</text>
+          <polyline points="120,100 250,104 380,110 510,118 640,124 770,130" fill="none" stroke="#4a7fc1" stroke-width="2" stroke-opacity="0.5" stroke-linejoin="round"/>
+          <circle cx="120" cy="100" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="250" cy="104" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="380" cy="110" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="510" cy="118" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="640" cy="124" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <circle cx="770" cy="130" r="3" fill="#4a7fc1" opacity="0.5"/>
+          <polyline points="120,62 250,65 380,70 510,74 640,78 770,82" fill="none" stroke="#8e99b4" stroke-width="2" stroke-opacity="0.45" stroke-linejoin="round"/>
+          <circle cx="120" cy="62" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="250" cy="65" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="380" cy="70" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="510" cy="74" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="640" cy="78" r="3" fill="#8e99b4" opacity="0.45"/>
+          <circle cx="770" cy="82" r="3" fill="#8e99b4" opacity="0.45"/>
+          <polyline points="120,80 250,70 380,58 510,46 640,34 770,26" fill="none" stroke="#dc2626" stroke-width="2" stroke-opacity="0.5" stroke-linejoin="round"/>
+          <circle cx="120" cy="80" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="250" cy="70" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="380" cy="58" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="510" cy="46" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="640" cy="34" r="3" fill="#dc2626" opacity="0.5"/>
+          <circle cx="770" cy="26" r="3" fill="#dc2626" opacity="0.5"/>
+        </svg>
+        <div class="sentiment-legend">
+          <div class="sent-legend-item"><div class="sent-legend-line" style="background:#4a7fc1"></div><span>Positive</span></div>
+          <div class="sent-legend-item"><div class="sent-legend-line" style="background:#8e99b4"></div><span>Neutral</span></div>
+          <div class="sent-legend-item"><div class="sent-legend-line" style="background:#dc2626"></div><span>Negative</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <footer>
+    Framework informed by Levitsky &amp; Ziblatt, V-Dem, Freedom House, Polity5. &nbsp;·&nbsp;
+    Every indicator is <a href="#">defined and sourced</a>. &nbsp;·&nbsp;
+    Analysis, not advocacy.
+  </footer>
+
+
+  <script>
+  // ── SURVEILLANCE LOG FILTER ──────────────────────────────────────────────────
+  const survFilterBar = document.getElementById('surv-filter-bar');
+  const survList      = document.getElementById('surv-list');
+  const survNoResults = document.getElementById('surv-no-results');
+  const survEntries   = Array.from(survList.querySelectorAll('.surv-entry'));
+  const survBtns      = Array.from(survFilterBar.querySelectorAll('.filter-btn'));
+
+  let activeSurvType = 'all';
+
+  const survTypeMap = {
+    'type-facial':  'active-inst',
+    'type-social':  'active-prop',
+    'type-data':    'active-coerce',
+    'type-location':'active-all'
+  };
+
+  function applySurvFilter() {
+    let visible = 0;
+    survEntries.forEach(e => {
+      const types = e.dataset.types || '';
+      const ok = activeSurvType === 'all' || types.includes(activeSurvType);
+      e.classList.toggle('hidden', !ok);
+      if (ok) visible++;
+    });
+    survNoResults.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  survFilterBar.addEventListener('click', ev => {
+    const btn = ev.target.closest('.filter-btn');
+    if (!btn) return;
+    const f = btn.dataset.filter;
+    activeSurvType = (activeSurvType === f && f !== 'all') ? 'all' : f;
+    survBtns.forEach(b => b.classList.remove('active-all','active-prop','active-coerce','active-inst'));
+    if (activeSurvType === 'all') survBtns.find(b => b.dataset.filter === 'all').classList.add('active-all');
+    else btn.classList.add(survTypeMap[f] || 'active-all');
+    applySurvFilter();
+  });
+
+
+  // ── ENFORCEMENT INCIDENT BAR CHART ───────────────────────────────────────────
+  (function buildMtChart() {
+    const data = [
+      { month: "Dec '25", surv: 3,  force: 5  },
+      { month: "Jan '26", surv: 5,  force: 7  },
+      { month: "Feb '26", surv: 6,  force: 9  },
+      { month: "Mar '26", surv: 8,  force: 11 },
+      { month: "Apr '26", surv: 12, force: 16 },
+      { month: "May '26", surv: 9,  force: 14 }
+    ];
+
+    const container = document.getElementById('mt-chart').parentElement;
+    const W = container.clientWidth - 32;
+    const margin = { top: 10, right: 12, bottom: 30, left: 36 };
+    const H = 130;
+    const iW = W - margin.left - margin.right;
+    const iH = H - margin.top - margin.bottom;
+
+    const svg = d3.select('#mt-chart')
+      .attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('height', H);
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const x0 = d3.scaleBand().domain(data.map(d => d.month)).range([0, iW]).padding(0.25);
+    const x1 = d3.scaleBand().domain(['surv','force']).range([0, x0.bandwidth()]).padding(0.1);
+    const y  = d3.scaleLinear().domain([0, 20]).range([iH, 0]).nice();
+
+    g.append('g').call(d3.axisLeft(y).ticks(4).tickSize(-iW).tickFormat(''))
+      .call(a => a.select('.domain').remove())
+      .call(a => a.selectAll('line').attr('stroke','#2e3a58').attr('stroke-dasharray','3 3').attr('opacity',0.5));
+
+    const groups = g.selectAll('.group').data(data).join('g')
+      .attr('transform', d => `translate(${x0(d.month)},0)`);
+
+    groups.append('rect')
+      .attr('x', x1('surv')).attr('y', d => y(d.surv))
+      .attr('width', x1.bandwidth()).attr('height', d => iH - y(d.surv))
+      .attr('fill','#7c3aed').attr('opacity',0.6).attr('rx',1);
+
+    groups.append('rect')
+      .attr('x', x1('force')).attr('y', d => y(d.force))
+      .attr('width', x1.bandwidth()).attr('height', d => iH - y(d.force))
+      .attr('fill','#dc2626').attr('opacity',0.6).attr('rx',1);
+
+    g.append('g').attr('transform',`translate(0,${iH})`)
+      .call(d3.axisBottom(x0).tickSize(0))
+      .call(a => a.select('.domain').attr('stroke','#2e3a58'))
+      .call(a => a.selectAll('text').attr('font-family','Arial,sans-serif').attr('font-size','9').attr('fill','#8e99b4').attr('dy','1.2em'));
+
+    g.append('g').call(d3.axisLeft(y).ticks(4))
+      .call(a => a.select('.domain').remove())
+      .call(a => a.selectAll('text').attr('font-family','Arial,sans-serif').attr('font-size','9').attr('fill','#8e99b4'));
+
+    const leg = svg.append('g').attr('transform',`translate(${margin.left + 4},${H - 4})`);
+    [['#7c3aed','Surveillance deployments'],['#dc2626','Force incidents']].forEach(([c,label],i) => {
+      const lx = i * 180;
+      leg.append('rect').attr('x',lx).attr('y',-10).attr('width',8).attr('height',8).attr('fill',c).attr('opacity',0.6).attr('rx',1);
+      leg.append('text').attr('x',lx+11).attr('y',-2).attr('font-family','Arial,sans-serif').attr('font-size','8').attr('fill','#8e99b4').text(label);
+    });
+  })();
+  </script>
+
+</body>
+</html>
